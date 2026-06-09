@@ -95,7 +95,7 @@
 </div>
 
 <script>
-    // Globální proměnné – pouze je vytvoříme prázdné, SMap do nich přiřadíme až uvnitř initMap
+    // Globální proměnné – vytvoříme je prázdné, SMap do nich bezpečně přiřadíme až uvnitř initMap
     let baseCoords;
     let map, layerMarkers, layerGeometry;
     let stopCount = 0;
@@ -114,9 +114,8 @@
         baseEnd: null
     };
 
-    // TATO FUNKCE SE SPUSTÍ AŽ VE CHVÍLI, KDY SEZNAM HLÁSÍ "MÁM HOTOVO, KÓD STAŽEN"
+    // TATO FUNKCE SE SPUSTÍ BEZPEČNĚ AŽ VE CHVÍLI, KDY SEZNAM HLÁSÍ "KÓD STAŽEN"
     function initMap() {
-        // Teď už můžeme bezpečně zavolat SMap příkazy
         baseCoords = SMap.Coords.fromWGS84(12.932068, 49.440478);
         
         routePoints.baseStart = baseCoords;
