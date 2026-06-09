@@ -95,7 +95,7 @@
 </div>
 
 <script>
-    // Proměnné definujeme globálně, ale naplníme je až po úplném načtení API Mapy.cz
+    // Globální proměnné – pouze je vytvoříme prázdné, SMap do nich přiřadíme až uvnitř initMap
     let baseCoords;
     let map, layerMarkers, layerGeometry;
     let stopCount = 0;
@@ -114,9 +114,11 @@
         baseEnd: null
     };
 
-    // Funkce, která bezpečně postaví mapu až ve chvíli, kdy knihovna Mapy.cz existuje
+    // TATO FUNKCE SE SPUSTÍ AŽ VE CHVÍLI, KDY SEZNAM HLÁSÍ "MÁM HOTOVO, KÓD STAŽEN"
     function initMap() {
+        // Teď už můžeme bezpečně zavolat SMap příkazy
         baseCoords = SMap.Coords.fromWGS84(12.932068, 49.440478);
+        
         routePoints.baseStart = baseCoords;
         routePoints.baseEnd = baseCoords;
 
@@ -145,7 +147,7 @@
         });
     }
 
-    // Tímto příkazem řekneme zavaděči Seznamu, aby po stažení mapy spustil naši funkci initMap
+    // Tímto oficiálním příkazem Mapy.cz řekneme zavaděči, aby načetl doplňky a pak spustil funkci initMap
     Loader.load(null, {suggest: true, route: true}, initMap);
 
     // Funkce pro navázání našeptávače na textové pole
