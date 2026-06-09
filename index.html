@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logistická Kalkulačka Trasy a Ceny</title>
-    <script src="https://api.mapy.cz/loader.js?key=rl9Uzfp9bc8IWYM2DARh3pOHJO4Y65LoMOnGoPJjgAw"></script>
+    
+    <script src="https://api.mapy.cz/js/api/v4/v4.js?key=rl9Uzfp9bc8IWYM2DARh3pOHJO4Y65LoMOnGoPJjgAw"></script>
     
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -95,16 +96,13 @@
 </div>
 
 <script>
-    // Globální proměnné – vytvoříme je prázdné, SMap do nich bezpečně přiřadíme až uvnitř initMap
     let baseCoords;
     let map, layerMarkers, layerGeometry;
     let stopCount = 0;
 
-    // --- NASTAVENÍ CENOTVORBY ---
-    const PRICE_PER_KM = 13;   // Cena za 1 km cesty
-    const BASE_FEE = 20;       // Jednorázový nástupní poplatek
+    const PRICE_PER_KM = 13;   
+    const BASE_FEE = 20;       
 
-    // Struktura pro uložení vybraných souřadnic z našeptávačů
     let routePoints = {
         baseStart: null,
         pickup: null,
@@ -114,7 +112,6 @@
         baseEnd: null
     };
 
-    // TATO FUNKCE SE SPUSTÍ BEZPEČNĚ AŽ VE CHVÍLI, KDY SEZNAM HLÁSÍ "KÓD STAŽEN"
     function initMap() {
         baseCoords = SMap.Coords.fromWGS84(12.932068, 49.440478);
         
@@ -129,27 +126,23 @@
         map.addLayer(layerMarkers).enable();
         map.addLayer(layerGeometry).enable();
 
-        // Přidání fixního špendlíku základny
         let baseMarker = new SMap.Marker(baseCoords, "Základna", {title: "Základna Domažlice"});
         layerMarkers.addMarker(baseMarker);
 
-        // Aktivace našeptávačů pro jednotlivá pole
         setupSuggest("pickup", "pickup");
         setupSuggest("stop1", "stop1");
         setupSuggest("stop2", "stop2");
         setupSuggest("destination", "destination");
 
-        // Aktivace klikání do mapy
         map.getSignals().addListener(window, "map-click", function(e) {
             let coords = SMap.Coords.fromEvent(e.data.event, map);
             handleMapClick(coords);
         });
     }
 
-    // Tímto oficiálním příkazem Mapy.cz řekneme zavaděči, aby načetl doplňky a pak spustil funkci initMap
-    Loader.load(null, {suggest: true, route: true}, initMap);
+    // MAPA SE SPUSTÍ AUTOMATICKY, JAKMILE PROHLÍŽEČ TUHLE STRÁNKU CELOU NAČTE
+    window.addEventListener("load", initMap);
 
-    // Funkce pro navázání našeptávače na textové pole
     function setupSuggest(inputId, pointKey) {
         let input = JAK.gel(inputId);
         let suggest = new SMap.Suggest(input, {
@@ -165,7 +158,6 @@
         });
     }
 
-    // Zobrazení políček pro zastávky
     function addStop() {
         if (stopCount === 0) {
             document.getElementById("stop1-group").style.display = "block";
@@ -177,7 +169,6 @@
         }
     }
 
-    // Kliknutí do mapy automaticky doplní souřadnice do prvního prázdného povinného pole
     function handleMapClick(coords) {
         if (!routePoints.pickup) {
             routePoints.pickup = coords;
@@ -194,7 +185,6 @@
         }
     }
 
-    // Získání textové adresy ze souřadnic při kliku do mapy
     function reverseGeocode(coords, inputId) {
         new SMap.Geocoder(coords, function(geocoder) {
             let results = geocoder.getResults();
@@ -205,7 +195,6 @@
         });
     }
 
-    // Překreslení špendlíků na mapě podle zadaných dat
     function updateMapMarkers() {
         layerMarkers.clear();
         layerMarkers.addMarker(new SMap.Marker(baseCoords, "Základna", {title: "Základna Domažlice"}));
@@ -216,7 +205,6 @@
         if (routePoints.destination) layerMarkers.addMarker(new SMap.Marker(routePoints.destination, "D", {title: "Cíl / Vykládka"}));
     }
 
-    // VÝPOČET TRASY A CENY (Celé kolečko)
     function calculateRoute() {
         if (!routePoints.pickup || !routePoints.destination) {
             alert("Prosím vyplňte minimálně Místo nakládky a Cíl/Vykládku.");
@@ -233,15 +221,12 @@
             let distanceInMeters = route.getResults().length;
             let distanceInKm = distanceInMeters / 1000;
             
-            // --- LOGIKA VÝPOČTU CENY ---
             let totalPrice = Math.round((distanceInKm * PRICE_PER_KM) + BASE_FEE);
             
-            // Zobrazení výsledků v panelu
             document.getElementById("total-distance").innerText = distanceInKm.toFixed(1) + " km";
             document.getElementById("total-price").innerText = totalPrice.toLocaleString('cs-CZ') + " Kč";
             document.getElementById("results-box").style.display = "block";
 
-            // Vykreslení čáry trasy do mapy
             layerGeometry.clear();
             let coords = route.getResults().geometry;
             let geometry = new SMap.Geometry(SMap.GEOMETRY_POLYLINE, null, coords, {color: "#2563eb", width: 5});
