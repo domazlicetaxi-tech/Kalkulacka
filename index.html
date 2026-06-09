@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logistická Kalkulačka Trasy a Ceny</title>
     <script src="https://api.mapy.cz/loader.js?key=rl9Uzfp9bc8IWYM2DARh3pOHJO4Y65LoMOnGoPJjgAw"></script>
-    <script>Loader.load(null, {suggest: true, route: true});</script>
     
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -96,8 +95,8 @@
 </div>
 
 <script>
-    // Pevné souřadnice základny v Domažlicích (B. Staška 76)
-    const baseCoords = SMap.Coords.fromWGS84(12.932068, 49.440478);
+    // Proměnné definujeme globálně, ale naplníme je až po úplném načtení API Mapy.cz
+    let baseCoords;
     let map, layerMarkers, layerGeometry;
     let stopCount = 0;
 
@@ -107,16 +106,20 @@
 
     // Struktura pro uložení vybraných souřadnic z našeptávačů
     let routePoints = {
-        baseStart: baseCoords,
+        baseStart: null,
         pickup: null,
         stop1: null,
         stop2: null,
         destination: null,
-        baseEnd: baseCoords
+        baseEnd: null
     };
 
-    // Inicializace mapy po načtení stránky
-    window.onload = function() {
+    // Funkce, která bezpečně postaví mapu až ve chvíli, kdy knihovna Mapy.cz existuje
+    function initMap() {
+        baseCoords = SMap.Coords.fromWGS84(12.932068, 49.440478);
+        routePoints.baseStart = baseCoords;
+        routePoints.baseEnd = baseCoords;
+
         map = new SMap(JAK.gel("map"), baseCoords, 10);
         map.addDefaultControls();
         
@@ -140,7 +143,10 @@
             let coords = SMap.Coords.fromEvent(e.data.event, map);
             handleMapClick(coords);
         });
-    };
+    }
+
+    // Tímto příkazem řekneme zavaděči Seznamu, aby po stažení mapy spustil naši funkci initMap
+    Loader.load(null, {suggest: true, route: true}, initMap);
 
     // Funkce pro navázání našeptávače na textové pole
     function setupSuggest(inputId, pointKey) {
@@ -227,7 +233,6 @@
             let distanceInKm = distanceInMeters / 1000;
             
             // --- LOGIKA VÝPOČTU CENY ---
-            // Celková cena = (kilometry * 13) + 20 Kč nástupné
             let totalPrice = Math.round((distanceInKm * PRICE_PER_KM) + BASE_FEE);
             
             // Zobrazení výsledků v panelu
