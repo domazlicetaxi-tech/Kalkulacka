@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Taxi Green Domažlice - Kalkulačka</title>
     
+    <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
+    <!-- Routing Machine -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
@@ -31,11 +33,46 @@
         
         /* 1. PEVNÁ HLAVIČKA (Neroluje se) */
         .header { background: var(--green-primary); padding: 15px 20px; color: white; text-align: center; flex-shrink: 0; }
-        .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
-        .header p { margin: 3px 0 0 0; font-size: 13px; opacity: 0.9; }
+        .header h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
         
+        /* Přepínač typu jízdy */
+        .mode-toggle { display: flex; background: rgba(0,0,0,0.15); padding: 4px; border-radius: 8px; margin-bottom: 12px; gap: 4px; }
+        .btn-mode { flex: 1; background: none; border: none; color: rgba(255,255,255,0.75); padding: 10px 5px; font-weight: 700; font-size: 13px; border-radius: 6px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-mode:hover { color: white; background: rgba(255,255,255,0.05); }
+        .btn-mode.active { background: white; color: var(--green-primary); box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+
         /* Styl pro firemní info/disclaimer */
-        .disclaimer { font-size: 11px !important; opacity: 1 !important; line-height: 1.4; background: rgba(0,0,0,0.2); padding: 8px 10px; border-radius: 6px; margin-top: 8px !important; text-align: left; border-left: 3px solid var(--green-light); }
+        .disclaimer { 
+            font-size: 11px !important; 
+            opacity: 1 !important; 
+            line-height: 1.4; 
+            background: rgba(0,0,0,0.2); 
+            padding: 10px; 
+            border-radius: 6px; 
+            text-align: left; 
+            border-left: 3px solid var(--green-light); 
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        /* Tlačítko pro rychlé volání z mobilu */
+        .btn-call {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--green-light);
+            color: white;
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            transition: background 0.2s;
+        }
+        .btn-call:hover { background: #16a34a; }
 
         /* 2. PROSTŘEDNÍ ČÁST PRO ADRESY (Tato JEDINÁ se roluje) */
         .input-section { flex: 1; overflow-y: auto; padding: 15px 20px; background: #ffffff; }
@@ -53,7 +90,6 @@
         .btn-map-pick { background: #f1f5f9; border: 2px solid #e2e8f0; border-radius: 8px; padding: 0 12px; cursor: pointer; font-size: 16px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
         .btn-map-pick:hover { background: var(--green-bg); border-color: var(--green-light); }
         
-        /* Blikající stav, když se čeká na kliknutí do mapy */
         .btn-map-pick.active { background: #ef4444; color: white; border-color: #dc2626; animation: pulse 1.2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
@@ -72,7 +108,7 @@
         #results-box { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
         .res-text { font-size: 12px; color: var(--green-dark); margin: 0; font-weight: 600; }
         .res-val { font-size: 26px; font-weight: 900; color: var(--green-primary); }
-        .formula-note { font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 8px; }
+        .formula-note { font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 8px; font-weight: 600; }
 
         /* MAPA */
         #map { flex: 1; height: 100%; width: 100%; z-index: 1; cursor: default; }
@@ -80,11 +116,13 @@
         /* RESPONSIVNÍ DESIGN PRO MOBILY */
         @media (max-width: 768px) {
             #app-container { flex-direction: column; }
-            #panel { width: 100%; height: 55vh; border-bottom: 3px solid var(--green-primary); }
-            #map { height: 45vh; width: 100%; }
+            #panel { width: 100%; height: 58vh; border-bottom: 3px solid var(--green-primary); }
+            #map { height: 42vh; width: 100%; }
             .header { padding: 10px 15px; }
-            .header h1 { font-size: 20px; }
-            .disclaimer { margin-top: 5px !important; padding: 5px 8px; font-size: 10px !important; }
+            .header h1 { font-size: 22px; margin-bottom: 6px; }
+            .mode-toggle { margin-bottom: 8px; }
+            .btn-mode { padding: 8px 4px; font-size: 11px; }
+            .disclaimer { padding: 8px; font-size: 10px !important; }
             .input-section { padding: 10px 15px; }
             .action-section { padding: 10px 15px; }
             .btn-calc { padding: 11px; font-size: 14px; }
@@ -96,14 +134,23 @@
 
 <div id="app-container">
     <div id="panel">
+        <!-- Pevná hlavička s přepínacími tlačítky -->
         <div class="header">
             <h1>Taxi Green</h1>
-            <p>Přibližná kalkulace ceny jízdy mimo město</p>
+            
+            <!-- Volba typu jízdy -->
+            <div class="mode-toggle">
+                <button id="mode-mimo" class="btn-mode active" onclick="changeMode('mimo')">Jízda mimo město</button>
+                <button id="mode-mesto" class="btn-mode" onclick="changeMode('mesto')">Jízda po městě</button>
+            </div>
+
             <div class="disclaimer">
-                Tyto Ceny jsou orientační. V případě upřesnění ceny nebo redukce ceny je třeba volat, telefonní číslo <b>607722555</b>.
+                <span>Tyto Ceny jsou orientační. V případě upřesnění ceny nebo redukce ceny je třeba volat, telefonní číslo <b>607 722 555</b>.</span>
+                <a href="tel:+420607722555" class="btn-call">📞 Rychlé volání</a>
             </div>
         </div>
         
+        <!-- Rolovací sekce na adresy -->
         <div class="input-section">
             <label>1. Místo nakládky</label>
             <div class="input-row">
@@ -127,6 +174,7 @@
             </div>
         </div>
 
+        <!-- Pevná spodní část -->
         <div class="action-section">
             <button class="btn-calc" onclick="calculateRoute()">Vypočítat trasu</button>
             <div id="results-box">
@@ -136,86 +184,98 @@
                 </div>
                 <div class="res-val"><span id="price-val">0</span> Kč</div>
             </div>
-            <div class="formula-note">Výpočet: (Ujeté km × 13 Kč) + 20 Kč</div>
+            <div class="formula-note" id="formula-text">Výpočet: (Ujeté km × 13 Kč) + 20 Kč</div>
         </div>
     </div>
 
+    <!-- Prvek pro mapu -->
     <div id="map"></div>
 </div>
 
 <script>
+    // Nastavení adresy vaší stálé základny
+    const BASE_ADDRESS = "Msgre. B. Staška 76, Domažlice";
+    let baseCoords = L.latLng(49.440478, 12.932068); 
+    let currentMode = 'mimo'; 
+
     // Inicializace mapy
-    const map = L.map('map', { zoomControl: false }).setView([49.4405, 12.9321], 13);
+    const map = L.map('map', { zoomControl: false }).setView([49.4405, 12.9321], 14);
     L.control.zoom({ position: 'topright' }).addTo(map); 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
 
+    // Automatické přesné dohledání polohy základny na startu aplikace
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(BASE_ADDRESS)}&countrycodes=cz`)
+    .then(res => res.json())
+    .then(data => {
+        if (data && data.length > 0) {
+            baseCoords = L.latLng(data[0].lat, data[0].lon);
+            map.setView(baseCoords, 14); 
+            console.log("Základna úspěšně nastavena na adresu: " + BASE_ADDRESS);
+        }
+    })
+    .catch(err => console.error("Chyba při automatickém zaměření základny:", err));
+
     setTimeout(() => { map.invalidateSize(); }, 200);
 
-    const baseCoords = L.latLng(49.440478, 12.932068); 
     let coordsData = { pickup: null, dropoff: null, waypoints: [] };
     let tempMarkers = L.layerGroup().addTo(map); 
     let routingControl = null;
-    let activeSelection = null; // Uchovává info, které pole se právě plní z mapy
+    let activeSelection = null;
 
-    // Aktivace režimu "Výběr z mapy"
-    function startMapSelection(type, inputId, wpIndex, e) {
-        if (e) e.stopPropagation();
+    function changeMode(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
+        document.getElementById(`mode-${mode}`).classList.add('active');
         
-        // Pokud klikneme na již aktivní tlačítko, režim zrušíme
-        const isAlreadyActive = e.currentTarget.classList.contains('active');
-        
-        // Vypneme blikání u všech tlačítek
-        document.querySelectorAll('.btn-map-pick').forEach(b => b.classList.remove('active'));
-        document.getElementById('map').style.cursor = 'default';
-        activeSelection = null;
-        
-        if (!isAlreadyActive) {
-            activeSelection = { type: type, inputId: inputId, wpIndex: wpIndex };
-            e.currentTarget.classList.add('active');
-            document.getElementById('map').style.cursor = 'crosshair'; // Změna kurzoru nad mapou
+        if (mode === 'mimo') {
+            document.getElementById('formula-text').innerText = "Výpočet: (Ujeté km × 13 Kč) + 20 Kč";
+        } else {
+            document.getElementById('formula-text').innerText = "Výpočet: (Ujeté km × 34 Kč) + 20 Kč nástupné";
+        }
+
+        if (coordsData.pickup && coordsData.dropoff) {
+            calculateRoute();
         }
     }
 
-    // Odchycení kliknutí do mapy
+    function startMapSelection(type, inputId, wpIndex, e) {
+        if (e) e.stopPropagation();
+        const isAlreadyActive = e.currentTarget.classList.contains('active');
+        document.querySelectorAll('.btn-map-pick').forEach(b => b.classList.remove('active'));
+        document.getElementById('map').style.cursor = 'default';
+        activeSelection = null;
+        if (!isAlreadyActive) {
+            activeSelection = { type: type, inputId: inputId, wpIndex: wpIndex };
+            e.currentTarget.classList.add('active');
+            document.getElementById('map').style.cursor = 'crosshair';
+        }
+    }
+
     map.on('click', function(e) {
-        if (!activeSelection) return; // Pokud není aktivní režim výběru, nic neděláme
-        
+        if (!activeSelection) return;
         const latlng = e.latlng;
         const target = activeSelection;
-        
-        // Vypneme aktivní stav tlačítek
         document.querySelectorAll('.btn-map-pick').forEach(b => b.classList.remove('active'));
         document.getElementById('map').style.cursor = 'default';
         activeSelection = null;
         
-        // Spustíme reverzní vyhledání adresy podle souřadnic (Reverse Geocoding)
         fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}`)
         .then(res => res.json())
         .then(data => {
             let addressName = "Místo z mapy";
             if (data && data.display_name) {
-                // Zkrácení dlouhého textu adresy pro přehlednost
                 addressName = data.display_name.split(',').slice(0, 2).join(',');
             }
-            
-            // Zapíšeme adresu do správného políčka
             document.getElementById(target.inputId).value = addressName;
-            
-            // Uložíme souřadnice
             if (target.type === 'pickup') coordsData.pickup = latlng;
             else if (target.type === 'dropoff') coordsData.dropoff = latlng;
             else if (target.type === 'waypoint') coordsData.waypoints[target.wpIndex] = latlng;
             
-            // Vykreslíme dočasný špendlík
             tempMarkers.clearLayers(); 
             L.marker(latlng).addTo(tempMarkers).bindPopup(addressName).openPopup();
-            
-            // Pokud máme start i cíl, automaticky spočítáme trasu
             if (coordsData.pickup && coordsData.dropoff) calculateRoute();
         })
         .catch(err => {
-            console.error("Chyba při zjišťování adresy:", err);
-            // Záložní plán: pokud selže internet, napíše to aspoň souřadnice
             let fallbackName = `${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}`;
             document.getElementById(target.inputId).value = fallbackName;
             if (target.type === 'pickup') coordsData.pickup = latlng;
@@ -225,7 +285,6 @@
         });
     });
 
-    // Klasický textový našeptávač (při psaní na klávesnici)
     function setupAutocomplete(inputId, listId, type, wpIndex = null) {
         const input = document.getElementById(inputId);
         const list = document.getElementById(listId);
@@ -280,7 +339,6 @@
     setupAutocomplete('pickup', 'pickup-list', 'pickup');
     setupAutocomplete('dropoff', 'dropoff-list', 'dropoff');
 
-    // Dynamické přidávání průjezdných bodů
     let wpCounter = 0;
     function addWaypoint() {
         const id = wpCounter++;
@@ -291,7 +349,7 @@
             <label style="color: var(--text-muted);">Průjezdný bod</label>
             <div class="input-row">
                 <div class="input-wrapper">
-                    <input type="text" id="wp-input-${id}" placeholder="Začněte psát nebo klikněte na mapu..." autocomplete="off">
+                    <input type="text" id="wp-input-${id}" placeholder="Začněte psát..." autocomplete="off">
                     <div id="wp-list-${id}" class="autocomplete-list"></div>
                 </div>
                 <button class="btn-map-pick" onclick="startMapSelection('waypoint', 'wp-input-${id}', ${id}, event)" title="Vybrat kliknutím v mapě">📍</button>
@@ -299,53 +357,98 @@
         `;
         container.appendChild(wrapper);
         setupAutocomplete(`wp-input-${id}`, `wp-list-${id}`, 'waypoint', id);
-        
         document.querySelector('.input-section').scrollTop = 1000;
     }
 
-    // Výpočet a vykreslení trasy
     function calculateRoute() {
         if (!coordsData.pickup || !coordsData.dropoff) {
             alert("Vyberte prosím adresy zadáním textu nebo pomocí ikony špendlíku 📍 a kliknutím do mapy.");
             return;
         }
-
         tempMarkers.clearLayers();
+        
+        let finalPoints = [];
 
-        let finalPoints = [baseCoords, coordsData.pickup];
-        coordsData.waypoints.forEach(wp => { if (wp) finalPoints.push(wp); });
-        finalPoints.push(coordsData.dropoff);
-        finalPoints.push(baseCoords);
+        if (currentMode === 'mimo') {
+            finalPoints.push(baseCoords);
+            finalPoints.push(coordsData.pickup);
+            coordsData.waypoints.forEach(wp => { if (wp) finalPoints.push(wp); });
+            finalPoints.push(coordsData.dropoff);
+            finalPoints.push(baseCoords);
+        } else {
+            finalPoints.push(coordsData.pickup);
+            coordsData.waypoints.forEach(wp => { if (wp) finalPoints.push(wp); });
+            finalPoints.push(coordsData.dropoff);
+        }
 
         if (routingControl) map.removeControl(routingControl);
 
+        const carIcon = L.divIcon({
+            html: '<div style="font-size: 26px; text-align: center; line-height: 1; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.4));">🚖</div>',
+            className: 'custom-car-marker',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+            popupAnchor: [0, -10]
+        });
+
         routingControl = L.Routing.control({
             waypoints: finalPoints,
-            router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }),
-            // VÝRAZNÁ ZÁŘIVÁ ZELENÁ TRASA (Tlustší čára, plná barva)
+            router: L.Routing.osrmv1({ 
+                serviceUrl: 'https://router.project-osrm.org/route/v1',
+                routingOptions: {
+                    continue_straight: false, // Umožní okamžité otočení na místě
+                    alternatives: true        // Vyhledá více variant tras (včetně zkratek přes ulice)
+                }
+            }),
             lineOptions: { styles: [{ color: '#00cc44', opacity: 0.9, weight: 8 }] }, 
             fitSelectedRoutes: true,
             show: false, 
             createMarker: function(i, wp, nWps) {
                 let label = "Bod trasy";
-                if (i === 0 || i === nWps - 1) label = "Základna Domažlice";
-                else if (i === 1) label = "Nakládka";
-                else if (i === nWps - 2) label = "Vykládka";
+                
+                if (currentMode === 'mimo') {
+                    if (i === 0 || i === nWps - 1) {
+                        label = i === 0 ? "Start: Základna Staška 76" : "Cíl: Návrat na základnu";
+                        return L.marker(wp.latLng, { icon: carIcon }).bindPopup(`<b>${label}</b>`);
+                    }
+                    else if (i === 1) label = "Místo nakládky";
+                    else if (i === nWps - 2) label = "Místo vykládky";
+                } else {
+                    if (i === 0) {
+                        label = "Místo nakládky (Zde vozidlo startuje)";
+                        return L.marker(wp.latLng, { icon: carIcon }).bindPopup(`<b>${label}</b>`);
+                    }
+                    else if (i === nWps - 1) label = "Místo vykládky";
+                }
+                
                 return L.marker(wp.latLng).bindPopup(`<b>${label}</b>`);
             }
         }).addTo(map);
 
         routingControl.on('routesfound', function(e) {
-            let distanceInKm = (e.routes[0].summary.totalDistance / 1000).toFixed(1);
-            let totalPrice = Math.round((distanceInKm * 13) + 20);
-            
+            // MATEMATICKÉ ZAJIŠTĚNÍ NEJKRATŠÍ TRASY:
+            // Seřadíme nalezené trasy od absolutně nejkratší (podle počtu metrů) po nejdelší.
+            // Tím přinutíme mapu vybrat trasu přes městské ulice namísto zdlouhavých obchvatů.
+            e.routes.sort(function(a, b) {
+                return a.summary.totalDistance - b.summary.totalDistance;
+            });
+
+            // Bereme v potaz první (nyní striktně nejkratší) trasu ze seznamu
+            let shortestRoute = e.routes[0];
+            let distanceInKm = (shortestRoute.summary.totalDistance / 1000).toFixed(1);
+            let totalPrice = 0;
+
+            if (currentMode === 'mimo') {
+                totalPrice = Math.round((distanceInKm * 13) + 20);
+            } else {
+                totalPrice = Math.round((distanceInKm * 34) + 20);
+            }
+
             document.getElementById('dist-val').innerText = distanceInKm;
             document.getElementById('price-val').innerText = totalPrice.toLocaleString('cs-CZ');
-            
             setTimeout(() => { map.invalidateSize(); }, 300);
         });
     }
-    
     window.addEventListener('resize', () => { map.invalidateSize(); });
 </script>
 </body>
