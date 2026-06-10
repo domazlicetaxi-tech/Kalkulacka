@@ -71,7 +71,7 @@
 
         #map { flex: 1; height: 100%; width: 100%; z-index: 1; }
 
-        /* OKNO REGISTRACE ZÁKAZNÍKA (PŘEKRYTÍ PANELU) */
+        /* OKNO REGISTRACE ZÁKAZNÍKA */
         #registration-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 5000; padding: 25px 20px; box-sizing: border-box; overflow-y: auto; }
         .reg-title { color: var(--green-dark); font-size: 20px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; border-bottom: 2px solid var(--green-primary); padding-bottom: 8px; }
         .reg-info { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
@@ -112,7 +112,7 @@
 <div id="app-container">
     <div id="panel">
         
-        <!-- OKNO JEDNORÁZOVÉ REGISTRACE (PŘEKRYTÍ PANELU) -->
+        <!-- OKNO JEDNORÁZOVÉ REGISTRACE -->
         <div id="registration-overlay">
             <div class="reg-title">Aktivace kalkulačky</div>
             <p class="reg-info">Pro bezplatné využití kalkulačky trasy vyplňte prosím registrační údaje. Při příštím spuštění na tomto telefonu již nebude ověření vyžadováno a vizitka se rovnou uloží do vašeho zařízení.</p>
@@ -156,7 +156,7 @@
             <label>1. Místo nakládky</label>
             <div class="input-row">
                 <div class="input-wrapper">
-                    <input type="text" id="pickup" placeholder="Odkud?..." autocomplete="off">
+                    <input type="text" id="pickup" placeholder="Odkud? (Zjišťuji GPS polohu...)" autocomplete="off">
                     <div id="pickup-list" class="autocomplete-list"></div>
                 </div>
                 <button class="btn-map-pick" onclick="startMapSelection('pickup', 'pickup', null, event)">📍</button>
@@ -190,7 +190,7 @@
     <div id="map"></div>
 </div>
 
-<!-- PANEL ADMINISTRACE - EVIDENCE ZÁKAZNÍKŮ -->
+<!-- PANEL ADMINISTRACE -->
 <div id="admin-view">
     <div class="admin-header">
         <h2>Evidence registrovaných zákazníků - Taxi Green</h2>
@@ -241,6 +241,9 @@
     window.addEventListener('DOMContentLoaded', () => {
         if (localStorage.getItem('taxi_green_registered') === 'true') {
             document.getElementById('registration-overlay').style.display = 'none';
+            requestUserLocation(); // Pokud už je registrovaný, rovnou vyžádá GPS
+        } else {
+            document.getElementById('pickup').placeholder = "Odkud?...";
         }
     });
 
@@ -252,40 +255,93 @@
         }
     }
 
-    // --- ZPRACOVÁNÍ REGISTRACE ---
-    function submitRegistration() {
-        const name = document.getElementById('reg-name').value.trim();
-        const surname = document.getElementById('reg-surname').value.trim();
-        const phone = document.getElementById('reg-phone').value.trim();
-
-        if (!name || !surname || !phone) {
-            alert('Pro pokračování vyplňte všechna pole (Jméno, Příjmení i Telefon).');
-            return;
+    // --- FUNKCE PRO ZÍSKÁNÍ GPS POLOHY TELEFONU ---
+    function requestUserLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const latlng = L.latLng(position.coords.latitude, position.coords.longitude);
+                    coordsData.pickup = latlng;
+                    
+                    // Převod GPS souřadnic na textovou adresu (hledá nejbližší ulici)
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        let addressName = data && data.display_name ? data.display_name.split(',').slice(0, 2).join(',') : "Moje aktuální poloha";
+                        document.getElementById('pickup').value = addressName;
+                        
+                        tempMarkers.clearLayers(); 
+                        L.marker(latlng).addTo(tempMarkers).bindPopup(addressName).openPopup();
+                        map.flyTo(latlng, 14);
+                        
+                        if (coordsData.pickup && coordsData.dropoff) calculateRoute();
+                    }).catch(() => {
+                        document.getElementById('pickup').value = "Moje poloha (GPS)";
+                    });
+                },
+                (error) => {
+                    console.warn("Uživatel zamítl polohu nebo GPS neodpovídá:", error.message);
+                    document.getElementById('pickup').placeholder = "Odkud?...";
+                },
+                { enableHighAccuracy: true, timeout: 7000 }
+            );
         }
+    }
 
-        const isMobile = /Mobi|Android|iPhone/i.test(navigator.userAgent);
+    // --- ZPRACOVÁNÍ REGISTRACE (ZODOLNĚNÉ PRO MOBILY) ---
+    function submitRegistration() {
+        try {
+            const name = document.getElementById('reg-name').value.trim();
+            const surname = document.getElementById('reg-surname').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
 
-        if (db) {
-            db.collection("registered_customers").add({
-                date: firebase.firestore.FieldValue.serverTimestamp(),
-                fullName: `${name} ${surname}`,
-                phone: phone,
-                device: isMobile ? "Mobil" : "PC"
-            }).then(() => {
+            if (!name || !surname || !phone) {
+                alert('Pro pokračování vyplňte všechna pole (Jméno, Příjmení i Telefon).');
+                return;
+            }
+
+            const isMobile = /Mobi|Android|iPhone/i.test(navigator.userAgent);
+
+            if (db) {
+                // Bezpečný zápis času, který na mobilech nepadá
+                db.collection("registered_customers").add({
+                    date: new Date(),
+                    fullName: `${name} ${surname}`,
+                    phone: phone,
+                    device: isMobile ? "Mobil" : "PC"
+                }).then(() => {
+                    completeRegistrationWorkflow();
+                }).catch(err => {
+                    console.error("Firebase zápis selhal:", err);
+                    completeRegistrationWorkflow(); // Pustíme uživatele i při chybě databáze
+                });
+            } else {
                 completeRegistrationWorkflow();
-            }).catch(err => {
-                console.error(err);
-                completeRegistrationWorkflow();
-            });
-        } else {
-            completeRegistrationWorkflow();
+            }
+        } catch (globalErr) {
+            console.error("Chyba registrační funkce:", globalErr);
+            completeRegistrationWorkflow(); // Nouzová pojistka
         }
     }
 
     function completeRegistrationWorkflow() {
-        localStorage.setItem('taxi_green_registered', 'true');
+        // 1. Okamžitě uložíme stav do paměti prohlížeče
+        try {
+            localStorage.setItem('taxi_green_registered', 'true');
+        } catch(e) {}
+        
+        // 2. Okamžitě zavřeme okno (uživatel nečeká na zásek stahování souboru)
         document.getElementById('registration-overlay').style.display = 'none';
-        downloadVCard();
+        
+        // 3. Pokusíme se vyžádat polohu (vyskočí systémové okno mobilu)
+        requestUserLocation();
+
+        // 4. Pokusíme se stáhnout vizitku (pokud to mobil zablokuje, try-catch zajistí, že zbytek kódu běží)
+        try {
+            downloadVCard();
+        } catch (vcardErr) {
+            console.warn("Mobil zablokoval automatické stažení vizitky:", vcardErr);
+        }
 
         if (coordsData.pickup && coordsData.dropoff) {
             calculateRoute();
@@ -314,13 +370,14 @@
         document.body.removeChild(a);
     }
 
-    // LOGOVÁNÍ PROKLIKU VOLÁNÍ
     function logCallClick() {
         if (!db) return;
-        db.collection("call_clicks").add({
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            device: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? "Mobil" : "PC"
-        });
+        try {
+            db.collection("call_clicks").add({
+                timestamp: new Date(),
+                device: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? "Mobil" : "PC"
+            });
+        } catch(e){}
     }
 
     // --- SPRÁVA ADMINISTRACE ---
@@ -366,7 +423,7 @@
             return;
         }
 
-        db.collection("registered_customers").orderBy("date", "desc").get().then(snapshot => {
+        db.collection("registered_customers").get().then(snapshot => {
             document.getElementById("total-users-count").innerText = snapshot.size;
             const tbody = document.getElementById("stats-table-body");
             tbody.innerHTML = "";
@@ -376,9 +433,13 @@
                 return;
             }
 
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                let dateStr = data.date ? data.date.toDate().toLocaleString('cs-CZ') : "Neznámý čas";
+            // Seřazení lokálně, abychom předešli indexačním chybám Firestore
+            let docsArray = [];
+            snapshot.forEach(doc => docsArray.push(doc.data()));
+            docsArray.sort((a,b) => (b.date ? b.date.seconds : 0) - (a.date ? a.date.seconds : 0));
+
+            docsArray.forEach(data => {
+                let dateStr = data.date ? new Date(data.date.seconds * 1000).toLocaleString('cs-CZ') : "Neznámý čas";
                 
                 let tr = document.createElement("tr");
                 tr.innerHTML = `
@@ -389,6 +450,8 @@
                 `;
                 tbody.appendChild(tr);
             });
+        }).catch(err => {
+            document.getElementById("stats-table-body").innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">Chyba načítání dat.</td></tr>`;
         });
     }
 
