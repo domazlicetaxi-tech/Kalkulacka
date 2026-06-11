@@ -25,8 +25,11 @@
             --danger-red: #ef4444;
         }
 
-        html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; overflow: hidden; position: fixed; top: 0; left: 0;}
-        #app-container { display: flex; height: 100dvh; width: 100vw; flex-direction: row; position: fixed; top: 0; left: 0; overflow: hidden; }
+        /* ODSTRANĚN FIXED POSITION PRO BODY - umožňuje přirozené scrollování na mobilu */
+        html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; }
+        
+        /* Na PC drží fullscreen */
+        #app-container { display: flex; height: 100dvh; width: 100vw; flex-direction: row; overflow: hidden; }
         #panel { width: 400px; height: 100%; background: white; box-shadow: 4px 0 15px rgba(0,0,0,0.1); z-index: 1000; display: flex; flex-direction: column; flex-shrink: 0; }
         
         /* Hlavička */
@@ -37,7 +40,8 @@
         .btn-mode { flex: 1; background: none; border: none; color: rgba(255,255,255,0.75); padding: 10px 5px; font-weight: 700; font-size: 13px; border-radius: 6px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
         .btn-mode.active { background: white; color: var(--green-primary); box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
 
-        .disclaimer { font-size: 11px !important; line-height: 1.4; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; text-align: left; border-left: 3px solid var(--green-light); display: flex; flex-direction: column; gap: 8px; }
+        .disclaimer { font-size: 11px; line-height: 1.4; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; text-align: left; border-left: 3px solid var(--green-light); display: flex; flex-direction: column; gap: 8px; }
+        .disclaimer span { display: block; cursor: pointer; }
         
         .header-buttons { display: flex; gap: 8px; width: 100%; }
         .btn-call { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; background: var(--green-light); color: white; text-decoration: none; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
@@ -55,14 +59,14 @@
         .btn-map-pick.active { background: var(--danger-red); color: white; border-color: #dc2626; animation: pulse 1.2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
-        .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e1; border-radius: 0 0 8px 8px; max-height: 150px; overflow-y: auto; z-index: 9999; }
+        .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e1; border-radius: 0 0 8px 8px; max-height: 150px; overflow-y: auto; z-index: 9999; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .autocomplete-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
         .autocomplete-item:hover { background-color: var(--green-bg); color: var(--green-primary); font-weight: 600; }
         .btn-add { background: none; border: 2px dashed #cbd5e1; color: var(--text-muted); width: 100%; padding: 8px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 15px; }
 
         /* Patička s cenou */
         .action-section { padding: 15px 20px; background: var(--green-bg); border-top: 2px solid #bbf7d0; flex-shrink: 0; }
-        .btn-calc { width: 100%; padding: 14px; background: var(--green-primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 16px; text-transform: uppercase; transition: background 0.2s; }
+        .btn-calc { width: 100%; padding: 14px; background: var(--green-primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 16px; text-transform: uppercase; transition: background 0.2s; box-shadow: 0 4px 6px rgba(21,128,61,0.2); }
         .btn-calc:hover { background: var(--green-dark); }
         #results-box { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
         .res-text { font-size: 12px; color: var(--green-dark); margin: 0; font-weight: 600; }
@@ -72,7 +76,7 @@
         #map { flex: 1; height: 100%; width: 100%; z-index: 1; }
 
         /* OKNO REGISTRACE ZÁKAZNÍKA */
-        #registration-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 5000; padding: 25px 20px; box-sizing: border-box; overflow-y: auto; }
+        #registration-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 5000; padding: 25px 20px; box-sizing: border-box; overflow-y: auto; }
         .reg-title { color: var(--green-dark); font-size: 20px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; border-bottom: 2px solid var(--green-primary); padding-bottom: 8px; }
         .reg-info { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
         .reg-group { margin-bottom: 15px; }
@@ -99,23 +103,32 @@
         .btn-delete { background: white; color: var(--danger-red); border: 1px solid var(--danger-red); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; }
         .btn-delete:hover { background: var(--danger-red); color: white; }
 
+        /* 📱 RESPONSIVNÍ ROZLOŽENÍ PRO MOBILNÍ TELEFONY */
         @media (max-width: 768px) {
-            #app-container { flex-direction: column; height: 100dvh; }
-            #map { height: 35dvh; width: 100%; order: 1; flex-shrink: 0; }
-            #panel { width: 100%; height: 65dvh; order: 2; border-top: 3px solid var(--green-primary); position: relative; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-            .input-section { overflow-y: auto; flex: 1; padding-bottom: 20px; }
-            .header { padding: 10px 12px; }
-            .header h1 { font-size: 20px; margin-bottom: 4px; }
-            .mode-toggle { margin-bottom: 6px; padding: 2px; }
-            .btn-mode { padding: 7px 2px; font-size: 11px; }
-            .disclaimer { padding: 6px 8px; font-size: 10px !important; }
-            .header-buttons { gap: 4px; }
-            .btn-call, .btn-vcard { padding: 6px; font-size: 11px; }
-            .input-section { padding: 10px 12px; }
-            input[type="text"], input[type="tel"], input[type="email"] { padding: 8px; font-size: 13px; }
-            .action-section { padding: 10px 12px; }
-            .btn-calc { padding: 10px; font-size: 14px; }
-            .res-val { font-size: 22px; }
+            html, body { height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
+            #app-container { flex-direction: column; height: auto; min-height: 100vh; overflow: visible; display: block; }
+            
+            /* Panel je nahoře nad mapou, přirozeně se posouvá (scroluje) */
+            #panel { width: 100%; height: auto; order: 1; border-top: none; position: relative; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: visible; flex: none; display: block; }
+            
+            /* Zmenšená hlavička, aby zbylo místo na formulář */
+            .header { padding: 12px 15px; }
+            .header h1 { font-size: 22px; margin-bottom: 8px; }
+            .mode-toggle { margin-bottom: 8px; }
+            .btn-mode { padding: 8px 4px; font-size: 12px; }
+            .disclaimer { padding: 8px; gap: 6px; }
+            .disclaimer span { font-size: 11px; text-align: center; margin-bottom: 2px; }
+            
+            /* Formulář - viditelný přepad, větší pole pro snadné kliknutí */
+            .input-section { padding: 15px; overflow: visible; }
+            input[type="text"], input[type="tel"], input[type="email"] { padding: 12px; font-size: 15px; }
+            .btn-map-pick { padding: 0 15px; }
+            
+            .action-section { padding: 15px; }
+            .btn-calc { padding: 14px; font-size: 16px; }
+
+            /* Mapa je dole, nikdy nepřekryje adresy */
+            #map { width: 100%; height: 50vh; min-height: 350px; order: 2; z-index: 1; display: block; flex: none; }
         }
     </style>
 </head>
@@ -126,7 +139,7 @@
         
         <div id="registration-overlay">
             <div class="reg-title">Aktivace kalkulačky</div>
-            <p class="reg-info">Pro zobrazení ceny a trasy vyplňte prosím jednorázovou registraci a <b>povolte přístup k GPS poloze</b>. Při příštím použití si vás systém bude pamatovat.</p>
+            <p class="reg-info">Pro zobrazení ceny a trasy vyplňte prosím jednorázovou registraci. <b>Pro správné fungování systému je nutnost povolit přístup k GPS poloze pro tento web VŽDY</b> (nikoliv jen při používání). Při příštím použití si vás systém bude pamatovat.</p>
             
             <div class="reg-group">
                 <label>Jméno</label>
@@ -220,7 +233,10 @@
         Celkový počet registrovaných uživatelů: <span id="total-users-count">0</span>
     </div>
 
-    <h3 class="admin-section-title">Historie vypočítaných tras</h3>
+    <h3 class="admin-section-title">
+        Historie vypočítaných tras
+        <button class="btn-delete" style="font-size: 14px; padding: 8px 15px;" onclick="deleteAllRecords('search_history')">🗑️ Smazat celou historii</button>
+    </h3>
     <div class="admin-filters">
         <label style="font-size: 12px; margin-right: -5px;">Od:</label>
         <input type="date" id="hist-date-from">
@@ -250,7 +266,10 @@
         </table>
     </div>
 
-    <h3 class="admin-section-title">Evidence registrovaných uživatelů</h3>
+    <h3 class="admin-section-title">
+        Evidence registrovaných uživatelů
+        <button class="btn-delete" style="font-size: 14px; padding: 8px 15px;" onclick="deleteAllRecords('registered_customers')">🗑️ Smazat všechny uživatele</button>
+    </h3>
     <div class="admin-filters">
         <label style="font-size: 12px; margin-right: -5px;">Od:</label>
         <input type="date" id="user-date-from">
@@ -346,10 +365,18 @@
             return;
         }
 
-        // --- VALIDACE E-MAILU POMOCÍ REGULÁRNÍHO VÝRAZU ---
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+        // --- ZPŘÍSNĚNÁ VALIDACE E-MAILU ---
+        const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+        const blockedDomains = ['tempmail.com', '10minutemail.com', 'guerrillamail.com', 'yopmail.com', 'mailinator.com', 'throwawaymail.com'];
+        const emailDomain = email.split('@')[1];
+
         if (!emailRegex.test(email)) {
-            alert('Zadejte prosím platnou e-mailovou adresu (např. jmeno@email.cz).');
+            alert('Zadejte prosím reálnou a platnou e-mailovou adresu (např. jmeno@email.cz).');
+            return;
+        }
+
+        if (emailDomain && blockedDomains.includes(emailDomain.toLowerCase())) {
+            alert('Použití jednorázových e-mailových adres není povoleno. Použijte prosím svůj reálný e-mail.');
             return;
         }
         
@@ -479,7 +506,7 @@
         if (titleClickCount === 5) {
             titleClickCount = 0;
             let password = prompt("Vstup do administrace.\nZadejte přístupové heslo:");
-            if (password === "26 3654" || password === "263654") {
+            if (password === "26 3654") {
                 openAdmin();
             } else if (password !== null) {
                 alert("Nesprávné heslo!");
@@ -516,6 +543,66 @@
                 console.error("Chyba při mazání dokumentu: ", err);
                 alert("Došlo k chybě při mazání záznamu.");
             });
+        }
+    }
+
+    // --- HROMADNÉ MAZÁNÍ (SMAZAT VŠE) ---
+    async function deleteAllRecords(collectionName) {
+        if (!db) return;
+        
+        let collectionLabel = collectionName === 'search_history' ? 'HISTORII TRAS' : 'REGISTROVANÉ UŽIVATELE';
+
+        // 1. Dvojité potvrzení
+        if (!confirm(`⚠️ VAROVÁNÍ: Opravdu chcete trvale smazat KOMPLETNĚ VŠECHNY záznamy pro ${collectionLabel}? Tuto akci NELZE vrátit zpět!`)) {
+            return;
+        }
+
+        // 2. Bezpečnostní pojistka heslem
+        let password = prompt("Pro potvrzení hromadného smazání zadejte administrátorské heslo:");
+        if (password !== "26 3654") {
+            alert("Nesprávné heslo. Mazání bylo zrušeno.");
+            return;
+        }
+
+        try {
+            document.body.style.cursor = 'wait';
+            
+            const snapshot = await db.collection(collectionName).get();
+            if (snapshot.empty) {
+                alert("Tato sekce je již prázdná.");
+                document.body.style.cursor = 'default';
+                return;
+            }
+
+            // Firestore umožňuje smazat maximálně 500 dokumentů v jedné dávce (batch)
+            let batches = [];
+            let currentBatch = db.batch();
+            let count = 0;
+
+            snapshot.docs.forEach((doc) => {
+                currentBatch.delete(doc.ref);
+                count++;
+                if (count === 500) {
+                    batches.push(currentBatch.commit());
+                    currentBatch = db.batch();
+                    count = 0;
+                }
+            });
+
+            if (count > 0) {
+                batches.push(currentBatch.commit());
+            }
+
+            await Promise.all(batches); // Počkáme na dokončení všech dávek
+            
+            document.body.style.cursor = 'default';
+            alert(`Úspěšně smazáno všech ${snapshot.size} záznamů.`);
+            loadStatistics(); // Znovu načte a vyčistí tabulky
+            
+        } catch (err) {
+            console.error("Chyba při hromadném mazání: ", err);
+            document.body.style.cursor = 'default';
+            alert("Došlo k chybě při mazání databáze. Zkuste to prosím znovu.");
         }
     }
 
@@ -838,6 +925,13 @@
 
             document.getElementById('dist-val').innerText = distanceInKm;
             document.getElementById('price-val').innerText = totalPrice.toLocaleString('cs-CZ');
+
+            // Auto-scroll dolů na mapu na mobilních zařízeních po výpočtu
+            if (window.innerWidth <= 768) {
+                setTimeout(() => {
+                    document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
+            }
 
             let now = Date.now();
             if (db && (now - lastLogTime > 3000)) {
