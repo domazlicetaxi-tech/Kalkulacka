@@ -22,12 +22,14 @@
             --green-bg: #f0fdf4;
             --text-dark: #1e293b;
             --text-muted: #64748b;
+            --danger-red: #ef4444;
         }
 
         html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; overflow: hidden; position: fixed; top: 0; left: 0;}
         #app-container { display: flex; height: 100dvh; width: 100vw; flex-direction: row; position: fixed; top: 0; left: 0; overflow: hidden; }
         #panel { width: 400px; height: 100%; background: white; box-shadow: 4px 0 15px rgba(0,0,0,0.1); z-index: 1000; display: flex; flex-direction: column; flex-shrink: 0; }
         
+        /* Hlavička */
         .header { background: var(--green-primary); padding: 15px 20px; color: white; text-align: center; flex-shrink: 0; position: relative; }
         .header h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; cursor: pointer; }
         
@@ -41,15 +43,16 @@
         .btn-call { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; background: var(--green-light); color: white; text-decoration: none; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
         .btn-vcard { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; background: #ffffff; color: var(--green-primary); border: none; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
 
+        /* Vstupy */
         .input-section { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 15px 20px; background: #ffffff; }
         label { font-weight: 700; font-size: 13px; color: var(--green-dark); display: block; margin-bottom: 4px; text-transform: uppercase; }
         .input-row { display: flex; gap: 6px; margin-bottom: 12px; position: relative; }
         .input-wrapper { flex: 1; position: relative; }
-        input[type="text"], input[type="tel"] { width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; }
-        input[type="text"]:focus, input[type="tel"]:focus { border-color: var(--green-light); }
+        input[type="text"], input[type="tel"], input[type="email"] { width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; }
+        input[type="text"]:focus, input[type="tel"]:focus, input[type="email"]:focus { border-color: var(--green-light); }
 
         .btn-map-pick { background: #f1f5f9; border: 2px solid #e2e8f0; border-radius: 8px; padding: 0 12px; cursor: pointer; font-size: 16px; }
-        .btn-map-pick.active { background: #ef4444; color: white; border-color: #dc2626; animation: pulse 1.2s infinite; }
+        .btn-map-pick.active { background: var(--danger-red); color: white; border-color: #dc2626; animation: pulse 1.2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
         .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e1; border-radius: 0 0 8px 8px; max-height: 150px; overflow-y: auto; z-index: 9999; }
@@ -57,8 +60,9 @@
         .autocomplete-item:hover { background-color: var(--green-bg); color: var(--green-primary); font-weight: 600; }
         .btn-add { background: none; border: 2px dashed #cbd5e1; color: var(--text-muted); width: 100%; padding: 8px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 15px; }
 
+        /* Patička s cenou */
         .action-section { padding: 15px 20px; background: var(--green-bg); border-top: 2px solid #bbf7d0; flex-shrink: 0; }
-        .btn-calc { width: 100%; padding: 14px; background: var(--green-primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 16px; text-transform: uppercase; }
+        .btn-calc { width: 100%; padding: 14px; background: var(--green-primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 16px; text-transform: uppercase; transition: background 0.2s; }
         .btn-calc:hover { background: var(--green-dark); }
         #results-box { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
         .res-text { font-size: 12px; color: var(--green-dark); margin: 0; font-weight: 600; }
@@ -67,27 +71,51 @@
 
         #map { flex: 1; height: 100%; width: 100%; z-index: 1; }
 
+        /* OKNO REGISTRACE ZÁKAZNÍKA */
         #registration-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 5000; padding: 25px 20px; box-sizing: border-box; overflow-y: auto; }
         .reg-title { color: var(--green-dark); font-size: 20px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; border-bottom: 2px solid var(--green-primary); padding-bottom: 8px; }
         .reg-info { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
         .reg-group { margin-bottom: 15px; }
-        .btn-reg-submit { width: 100%; padding: 14px; background: var(--green-primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+        .btn-reg-submit { width: 100%; padding: 14px; background: var(--green-primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; text-transform: uppercase; margin-top: 10px; box-shadow: 0 4px 6px rgba(21,128,61,0.2); }
+        .btn-reg-submit:disabled { background: #94a3b8; cursor: not-allowed; }
 
+        /* OKNO ADMINISTRACE STATISTIK */
         #admin-view { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: white; z-index: 99999; padding: 20px; box-sizing: border-box; overflow-y: auto; }
-        .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--green-primary); padding-bottom: 10px; margin-bottom: 20px; }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--green-primary); padding-bottom: 10px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .stat-card { background: var(--green-bg); padding: 20px; border-radius: 8px; border-left: 5px solid var(--green-primary); margin-bottom: 20px; font-size: 18px; font-weight: bold; color: var(--green-dark); }
-        .admin-table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        .admin-section-title { margin-top: 30px; margin-bottom: 10px; color: var(--green-primary); border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; font-size: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;}
+        .admin-filters { display: flex; gap: 10px; align-items: center; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; flex-wrap: wrap;}
+        .admin-filters input { padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; }
+        .admin-filters .btn-filter { background: var(--green-primary); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .admin-filters .btn-filter-reset { background: #64748b; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .admin-table-container { overflow-x: auto; margin-bottom: 40px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: left; font-size: 14px; }
         th { background: #f1f5f9; font-weight: bold; }
         tr:nth-child(even) { background: #f8fafc; }
-        .btn-back { background: #64748b; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; }
-        .btn-delete { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .btn-back { background: #64748b; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        a.admin-link { color: var(--green-primary); text-decoration: none; font-weight: bold; }
+        a.admin-link:hover { text-decoration: underline; }
+        .btn-delete { background: white; color: var(--danger-red); border: 1px solid var(--danger-red); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; }
+        .btn-delete:hover { background: var(--danger-red); color: white; }
 
         @media (max-width: 768px) {
-            #app-container { flex-direction: column; }
-            #map { height: 40dvh; width: 100%; }
-            #panel { width: 100%; height: 60dvh; }
+            #app-container { flex-direction: column; height: 100dvh; }
+            #map { height: 35dvh; width: 100%; order: 1; flex-shrink: 0; }
+            #panel { width: 100%; height: 65dvh; order: 2; border-top: 3px solid var(--green-primary); position: relative; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+            .input-section { overflow-y: auto; flex: 1; padding-bottom: 20px; }
+            .header { padding: 10px 12px; }
+            .header h1 { font-size: 20px; margin-bottom: 4px; }
+            .mode-toggle { margin-bottom: 6px; padding: 2px; }
+            .btn-mode { padding: 7px 2px; font-size: 11px; }
+            .disclaimer { padding: 6px 8px; font-size: 10px !important; }
+            .header-buttons { gap: 4px; }
+            .btn-call, .btn-vcard { padding: 6px; font-size: 11px; }
+            .input-section { padding: 10px 12px; }
+            input[type="text"], input[type="tel"], input[type="email"] { padding: 8px; font-size: 13px; }
+            .action-section { padding: 10px 12px; }
+            .btn-calc { padding: 10px; font-size: 14px; }
+            .res-val { font-size: 22px; }
         }
     </style>
 </head>
@@ -95,32 +123,51 @@
 
 <div id="app-container">
     <div id="panel">
+        
         <div id="registration-overlay">
             <div class="reg-title">Aktivace kalkulačky</div>
-            <p class="reg-info">Pro zobrazení ceny a trasy vyplňte registraci a <b>povolte přístup k GPS poloze</b>. Údaje slouží pouze pro interní účely.</p>
-            <div class="reg-group"><label>Jméno</label><input type="text" id="reg-name" placeholder="Jméno..."></div>
-            <div class="reg-group"><label>Příjmení</label><input type="text" id="reg-surname" placeholder="Příjmení..."></div>
-            <div class="reg-group"><label>Telefon</label><input type="tel" id="reg-phone" placeholder="+420 ..."></div>
+            <p class="reg-info">Pro zobrazení ceny a trasy vyplňte prosím jednorázovou registraci a <b>povolte přístup k GPS poloze</b>. Při příštím použití si vás systém bude pamatovat.</p>
+            
             <div class="reg-group">
-                <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 12px; text-transform: none;">
-                    <input type="checkbox" id="reg-consent" style="margin-top: 2px;">
-                    Souhlasím se zpracováním údajů pro interní účely.
+                <label>Jméno</label>
+                <input type="text" id="reg-name" placeholder="Napište své jméno...">
+            </div>
+            <div class="reg-group">
+                <label>Příjmení</label>
+                <input type="text" id="reg-surname" placeholder="Napište své příjmení...">
+            </div>
+            <div class="reg-group">
+                <label>Telefonní číslo</label>
+                <input type="tel" id="reg-phone" placeholder="+420 123 456 789...">
+            </div>
+            <div class="reg-group">
+                <label>E-mailová adresa</label>
+                <input type="email" id="reg-email" placeholder="vas@email.cz...">
+            </div>
+
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px; line-height: 1.4; display: flex; gap: 8px; align-items: flex-start;">
+                <input type="checkbox" id="reg-gdpr" style="margin-top: 2px;">
+                <label for="reg-gdpr" style="text-transform: none; font-weight: normal;">
+                    Souhlasím s tím, že mé údaje budou uchovány pro potřeby vývojáře a nebudou nikde zveřejňována (v souladu s GDPR). Beru na vědomí, že pokud systém vyhodnotí registraci jako nevěrohodnou, může být ze systému vymazána.
                 </label>
             </div>
-            <button class="btn-reg-submit" onclick="submitRegistration()">Zaregistrovat se</button>
+            
+            <button class="btn-reg-submit" onclick="submitRegistration()">Zaregistrovat se a vypočítat trasu</button>
         </div>
 
         <div class="header">
             <h1 onclick="handleAdminClick()">Taxi Green</h1>
+            
             <div class="mode-toggle">
-                <button id="mode-mimo" class="btn-mode active" onclick="changeMode('mimo')">Mimo město</button>
-                <button id="mode-mesto" class="btn-mode" onclick="changeMode('mesto')">Po městě</button>
+                <button id="mode-mimo" class="btn-mode active" onclick="changeMode('mimo')">Jízda mimo město</button>
+                <button id="mode-mesto" class="btn-mode" onclick="changeMode('mesto')">Jízda po městě</button>
             </div>
+
             <div class="disclaimer">
-                <span onclick="resetMemoryForTesting()">Ceny jsou orientační.</span>
+                <span onclick="resetMemoryForTesting()">Tyto Ceny jsou orientační. V případě upřesnění ceny je třeba volat.</span>
                 <div class="header-buttons">
-                    <a href="tel:+420607722555" class="btn-call" onclick="logCallClick()">📞 Volat</a>
-                    <button class="btn-vcard" onclick="downloadVCard()">💾 Uložit</button>
+                    <a href="tel:+420607722555" class="btn-call" onclick="logCallClick()">📞 Rychlé volání</a>
+                    <button class="btn-vcard" onclick="downloadVCard()">💾 Uložit kontakt</button>
                 </div>
             </div>
         </div>
@@ -128,14 +175,22 @@
         <div class="input-section">
             <label>1. Místo nakládky</label>
             <div class="input-row">
-                <div class="input-wrapper"><input type="text" id="pickup" placeholder="Odkud?..." autocomplete="off"><div id="pickup-list" class="autocomplete-list"></div></div>
+                <div class="input-wrapper">
+                    <input type="text" id="pickup" placeholder="Odkud?..." autocomplete="off">
+                    <div id="pickup-list" class="autocomplete-list"></div>
+                </div>
                 <button class="btn-map-pick" onclick="startMapSelection('pickup', 'pickup', null, event)">📍</button>
             </div>
+
             <div id="waypoints-container"></div>
             <button class="btn-add" onclick="addWaypoint()">+ Přidat průjezdný bod</button>
+
             <label>2. Místo vykládky</label>
             <div class="input-row">
-                <div class="input-wrapper"><input type="text" id="dropoff" placeholder="Kam?..." autocomplete="off"><div id="dropoff-list" class="autocomplete-list"></div></div>
+                <div class="input-wrapper">
+                    <input type="text" id="dropoff" placeholder="Kam pojedete?..." autocomplete="off">
+                    <div id="dropoff-list" class="autocomplete-list"></div>
+                </div>
                 <button class="btn-map-pick" onclick="startMapSelection('dropoff', 'dropoff', null, event)">📍</button>
             </div>
         </div>
@@ -143,7 +198,10 @@
         <div class="action-section">
             <button class="btn-calc" onclick="handleCalculateRequest()">Vypočítat trasu</button>
             <div id="results-box">
-                <div><p class="res-text">Vzdálenost: <span id="dist-val" style="font-size: 16px;">0</span> km</p><p class="res-text">Cena celkem:</p></div>
+                <div>
+                    <p class="res-text">Vzdálenost: <span id="dist-val" style="font-size: 16px;">0</span> km</p>
+                    <p class="res-text" style="margin-top: 3px;">Cena celkem:</p>
+                </div>
                 <div class="res-val"><span id="price-val">0</span> Kč</div>
             </div>
             <div class="formula-note" id="formula-text">Výpočet: (Ujeté km × 13 Kč) + 20 Kč</div>
@@ -153,15 +211,77 @@
 </div>
 
 <div id="admin-view">
-    <div class="admin-header"><h2>Administrace</h2><button class="btn-back" onclick="closeAdmin()">Zpět</button></div>
-    <div class="stat-card">Celkem registrovaných: <span id="total-users-count">0</span></div>
-    <h3>Historie tras</h3>
-    <div class="admin-table-container"><table><thead><tr><th>Čas</th><th>Zákazník</th><th>Trasa</th><th>Lokace</th><th>Vzdálenost / Cena</th></tr></thead><tbody id="history-table-body"></tbody></table></div>
-    <h3>Evidence uživatelů</h3>
-    <div class="admin-table-container"><table><thead><tr><th>Registrace</th><th>Jméno</th><th>Telefon</th><th>Zařízení</th><th>Lokace</th><th>Akce</th></tr></thead><tbody id="stats-table-body"></tbody></table></div>
+    <div class="admin-header">
+        <h2>Administrace - Taxi Green</h2>
+        <button class="btn-back" onclick="closeAdmin()">Zpět do kalkulačky</button>
+    </div>
+    
+    <div class="stat-card">
+        Celkový počet registrovaných uživatelů: <span id="total-users-count">0</span>
+    </div>
+
+    <h3 class="admin-section-title">Historie vypočítaných tras</h3>
+    <div class="admin-filters">
+        <label style="font-size: 12px; margin-right: -5px;">Od:</label>
+        <input type="date" id="hist-date-from">
+        <label style="font-size: 12px; margin-right: -5px; margin-left: 5px;">Do:</label>
+        <input type="date" id="hist-date-to">
+        <input type="text" id="hist-search" placeholder="Hledat jméno, tel., e-mail..." style="width: 200px;">
+        <button class="btn-filter" onclick="applyHistoryFilters()">Filtrovat</button>
+        <button class="btn-filter-reset" onclick="resetHistoryFilters()">Zrušit filtr</button>
+    </div>
+    <div class="admin-table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Datum a čas</th>
+                    <th>Zákazník</th>
+                    <th>Telefon</th>
+                    <th>E-mail</th>
+                    <th>Hledaná trasa</th>
+                    <th>Vzdálenost a Cena</th>
+                    <th>Poloha při hledání (Mapa)</th>
+                    <th>Akce</th>
+                </tr>
+            </thead>
+            <tbody id="history-table-body">
+                <tr><td colspan="8" style="text-align:center; color:gray;">Načítám historii kalkulací...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3 class="admin-section-title">Evidence registrovaných uživatelů</h3>
+    <div class="admin-filters">
+        <label style="font-size: 12px; margin-right: -5px;">Od:</label>
+        <input type="date" id="user-date-from">
+        <label style="font-size: 12px; margin-right: -5px; margin-left: 5px;">Do:</label>
+        <input type="date" id="user-date-to">
+        <input type="text" id="user-search" placeholder="Hledat jméno, tel., e-mail..." style="width: 200px;">
+        <button class="btn-filter" onclick="applyUsersFilters()">Filtrovat</button>
+        <button class="btn-filter-reset" onclick="resetUsersFilters()">Zrušit filtr</button>
+    </div>
+    <div class="admin-table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Datum registrace</th>
+                    <th>Jméno a Příjmení</th>
+                    <th>Telefon</th>
+                    <th>E-mailová adresa</th>
+                    <th>Zařízení</th>
+                    <th>Poloha při registraci (Mapa)</th>
+                    <th>Akce</th>
+                </tr>
+            </thead>
+            <tbody id="stats-table-body">
+                <tr><td colspan="7" style="text-align:center; color:gray;">Načítám zákazníky...</td></tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
+    // --- NASTAVENÍ FIREBASE DATABÁZE ---
     const firebaseConfig = {
         apiKey: "AIzaSyBU-wAdjtrC3wwkTulv432KfVVghnujYfg",
         authDomain: "kalkula-641ff.firebaseapp.com",
@@ -170,17 +290,44 @@
         messagingSenderId: "126206326606",
         appId: "1:126206326606:web:2f391fa66e7f5bc54b901f"
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    
+    let db = null;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        console.log("Firebase databáze úspěšně připojena!");
+    } catch (error) {
+        console.error("Chyba databáze, ale kalkulačka běží dál:", error);
+    }
 
+    // --- KONTROLA REGISTRACE PŘI NAČTENÍ ---
     window.addEventListener('DOMContentLoaded', () => {
-        if (localStorage.getItem('taxi_green_registered') === 'true') {
+        const isRegistered = localStorage.getItem('taxi_green_registered') === 'true';
+        const hasName = localStorage.getItem('taxi_green_name');
+        
+        if (isRegistered && hasName) {
             document.getElementById('registration-overlay').style.display = 'none';
+        } else {
+            localStorage.removeItem('taxi_green_registered');
         }
     });
 
+    let resetClicks = 0;
+    function resetMemoryForTesting() {
+        resetClicks++;
+        if (resetClicks >= 5) {
+            localStorage.clear();
+            alert("PAMĚŤ BYLA VYMAZÁNA! Stránka se nyní obnoví a vy si můžete vyzkoušet proces jako nový uživatel.");
+            location.reload();
+        }
+        setTimeout(() => resetClicks = 0, 3000);
+    }
+
     function handleCalculateRequest() {
-        if (localStorage.getItem('taxi_green_registered') !== 'true') {
+        const isRegistered = localStorage.getItem('taxi_green_registered') === 'true';
+        const hasName = localStorage.getItem('taxi_green_name');
+
+        if (!isRegistered || !hasName) {
             document.getElementById('registration-overlay').style.display = 'block';
         } else {
             calculateRoute();
@@ -191,125 +338,539 @@
         const name = document.getElementById('reg-name').value.trim();
         const surname = document.getElementById('reg-surname').value.trim();
         const phone = document.getElementById('reg-phone').value.trim();
-        const consent = document.getElementById('reg-consent').checked;
+        const email = document.getElementById('reg-email').value.trim();
+        const gdpr = document.getElementById('reg-gdpr').checked;
 
-        if (!name || !surname || !phone || !consent) {
-            alert('Vyplňte všechna pole a udělte souhlas se zpracováním údajů.');
+        if (!name || !surname || !phone || !email) {
+            alert('Pro dokončení registrace a výpočet trasy vyplňte prosím všechna pole (Jméno, Příjmení, Telefon, E-mail).');
             return;
         }
 
+        // --- VALIDACE E-MAILU POMOCÍ REGULÁRNÍHO VÝRAZU ---
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(email)) {
+            alert('Zadejte prosím platnou e-mailovou adresu (např. jmeno@email.cz).');
+            return;
+        }
+        
+        if (!gdpr) {
+            alert('Pro pokračování musíte zaškrtnout souhlas s podmínkami (GDPR).');
+            return;
+        }
+
+        const fullName = `${name} ${surname}`;
+        const isMobile = /Mobi|Android|iPhone/i.test(navigator.userAgent);
+        let locationText = "";
+
         const btn = document.querySelector('.btn-reg-submit');
-        btn.disabled = true; btn.innerText = "Zjišťuji polohu...";
+        const originalBtnText = btn.innerText;
+        btn.innerText = "Získávám polohu a ukládám...";
+        btn.disabled = true;
+
+        if (!navigator.geolocation) {
+            alert("Vaše zařízení nebo prohlížeč nepodporuje GPS polohu.");
+            btn.innerText = originalBtnText;
+            btn.disabled = false;
+            return;
+        }
 
         try {
             const pos = await new Promise((resolve, reject) => {
                 navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000 });
             });
+            
             const latlng = L.latLng(pos.coords.latitude, pos.coords.longitude);
+            if (!coordsData.pickup) coordsData.pickup = latlng; 
+            
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}`);
             const data = await res.json();
-            const locText = data.display_name ? data.display_name.split(',').slice(0, 2).join(',') : "GPS: " + latlng.lat.toFixed(4);
-
-            await db.collection("registered_customers").add({
-                date: new Date(), fullName: `${name} ${surname}`, phone,
-                device: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? "Mobil" : "PC",
-                location: locText
-            });
-
-            localStorage.setItem('taxi_green_registered', 'true');
-            localStorage.setItem('taxi_green_name', `${name} ${surname}`);
-            localStorage.setItem('taxi_green_phone', phone);
-            localStorage.setItem('taxi_green_location', locText);
             
-            document.getElementById('registration-overlay').style.display = 'none';
+            if (data && data.display_name) {
+                locationText = data.display_name.split(',').slice(0, 2).join(',');
+                if (!document.getElementById('pickup').value) document.getElementById('pickup').value = locationText;
+            } else {
+                locationText = `GPS: ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+                if (!document.getElementById('pickup').value) document.getElementById('pickup').value = "Moje aktuální poloha";
+            }
+            
+            tempMarkers.clearLayers(); 
+            L.marker(latlng).addTo(tempMarkers).bindPopup(locationText).openPopup();
+            map.flyTo(latlng, 14);
+
+        } catch (error) {
+            console.warn("Chyba GPS / Poloha zamítnuta.");
+            alert("Kalkulačku nelze použít bez povolení GPS polohy. Prosím, povolte přístup k poloze v nastavení vašeho prohlížeče a zkuste to znovu.");
+            btn.innerText = originalBtnText;
+            btn.disabled = false;
+            return; 
+        }
+
+        if (db) {
+            db.collection("registered_customers").add({
+                date: new Date(),
+                fullName: fullName,
+                phone: phone,
+                email: email,
+                device: isMobile ? "Mobil" : "PC",
+                location: locationText
+            }).then(() => {
+                completeRegistrationWorkflow(fullName, phone, email);
+            }).catch(err => {
+                console.error("Firebase zápis selhal:", err);
+                completeRegistrationWorkflow(fullName, phone, email); 
+            });
+        } else {
+            completeRegistrationWorkflow(fullName, phone, email);
+        }
+        
+        btn.innerText = originalBtnText;
+        btn.disabled = false;
+    }
+
+    function completeRegistrationWorkflow(fullName, phone, email) {
+        try { 
+            localStorage.setItem('taxi_green_registered', 'true'); 
+            localStorage.setItem('taxi_green_name', fullName);
+            localStorage.setItem('taxi_green_phone', phone);
+            localStorage.setItem('taxi_green_email', email);
+        } catch(e) {}
+        
+        document.getElementById('registration-overlay').style.display = 'none';
+        try { downloadVCard(); } catch (vcardErr) {}
+
+        if (coordsData.pickup && coordsData.dropoff) {
             calculateRoute();
-        } catch (e) {
-            alert("Registrace selhala. Povolte prosím GPS polohu v nastavení prohlížeče.");
-            btn.disabled = false; btn.innerText = "Zaregistrovat se";
+        } else {
+            alert("Registrace byla úspěšná! Nyní prosím zadejte trasu a stiskněte 'Vypočítat trasu'.");
         }
     }
 
-    function calculateRoute() {
-        if (!coordsData.pickup || !coordsData.dropoff) { alert("Vyberte trasu."); return; }
+    function downloadVCard() {
+        const vcardData = "BEGIN:VCARD\nVERSION:3.0\nFN:Taxi Green Domažlice\nORG:Taxi Green;\nTEL;TYPE=CELL,VOICE:+420607722555\nADR;TYPE=WORK,POSTAL,PARCEL:;;Msgre. B. Staška 76;Domažlice;;34401;Česká republika\nURL:https://green-taxi.cz\nEND:VCARD";
+        const blob = new Blob([vcardData], { type: "text/vcard;charset=utf-8" });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "Taxi_Green_Domazlice.vcf";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function logCallClick() {
+        if (!db) return;
+        try {
+            db.collection("call_clicks").add({ timestamp: new Date(), device: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? "Mobil" : "PC" });
+        } catch(e){}
+    }
+
+    // --- SPRÁVA ADMINISTRACE A FILTRY ---
+    let titleClickCount = 0;
+    let titleClickTimeout;
+    
+    // Globální pole pro uložení načtených dat
+    let allUsersData = [];
+    let allHistoryData = [];
+
+    function handleAdminClick() {
+        titleClickCount++;
+        clearTimeout(titleClickTimeout);
         
-        // ... (routing logic) ...
-        const waypoints = [coordsData.pickup, coordsData.dropoff];
-        if (routingControl) map.removeControl(routingControl);
-        routingControl = L.Routing.control({ waypoints: waypoints, addWaypoints: false }).addTo(map);
+        if (titleClickCount === 5) {
+            titleClickCount = 0;
+            let password = prompt("Vstup do administrace.\nZadejte přístupové heslo:");
+            if (password === "26 3654" || password === "263654") {
+                openAdmin();
+            } else if (password !== null) {
+                alert("Nesprávné heslo!");
+            }
+        }
+        titleClickTimeout = setTimeout(() => { titleClickCount = 0; }, 2000);
+    }
 
-        routingControl.on('routesfound', function(e) {
-            const dist = (e.routes[0].summary.totalDistance / 1000).toFixed(1);
-            const price = Math.round((dist * (currentMode === 'mimo' ? 13 : 34)) + 20);
-            document.getElementById('dist-val').innerText = dist;
-            document.getElementById('price-val').innerText = price;
+    function openAdmin() {
+        document.getElementById("app-container").style.display = "none";
+        document.getElementById("admin-view").style.display = "block";
+        loadStatistics();
+    }
 
-            db.collection("search_history").add({
-                date: new Date(),
-                name: localStorage.getItem('taxi_green_name'),
-                phone: localStorage.getItem('taxi_green_phone'),
-                userLocation: localStorage.getItem('taxi_green_location') || "Neznámá",
-                pickup: document.getElementById('pickup').value,
-                dropoff: document.getElementById('dropoff').value,
-                distance: dist,
-                price: price
+    function closeAdmin() {
+        document.getElementById("admin-view").style.display = "none";
+        document.getElementById("app-container").style.display = "flex";
+        setTimeout(() => { map.invalidateSize(); }, 200);
+    }
+
+    function renderLocationLink(locStr) {
+        if (!locStr) return '<span style="color:gray;">Neznámá poloha</span>';
+        let query = encodeURIComponent(locStr.replace("GPS:", "").trim());
+        return `<a href="https://www.google.com/maps/search/?api=1&query=${query}" target="_blank" class="admin-link">📍 Zobrazit na mapě<br><span style="font-size: 11px; font-weight: normal; color: gray;">${locStr}</span></a>`;
+    }
+
+    // --- MAZÁNÍ ZÁZNAMŮ ---
+    function deleteRecord(collectionName, docId) {
+        if (!db) return;
+        if (confirm("Opravdu chcete tento záznam trvale smazat? Tuto akci nelze vrátit.")) {
+            db.collection(collectionName).doc(docId).delete().then(() => {
+                loadStatistics(); // Znovu načte a vykreslí tabulky po smazání
+            }).catch(err => {
+                console.error("Chyba při mazání dokumentu: ", err);
+                alert("Došlo k chybě při mazání záznamu.");
             });
-        });
+        }
     }
 
     function loadStatistics() {
+        if (!db) return;
+
+        // Načtení uživatelů
         db.collection("registered_customers").get().then(snapshot => {
-            document.getElementById("total-users-count").innerText = snapshot.size;
-            const tbody = document.getElementById("stats-table-body");
-            tbody.innerHTML = "";
+            allUsersData = [];
             snapshot.forEach(doc => {
-                const data = doc.data();
-                const tr = document.createElement("tr");
-                tr.innerHTML = `<td>${new Date(data.date.seconds * 1000).toLocaleDateString()}</td><td>${data.fullName}</td><td>${data.phone}</td><td>${data.device}</td><td>${data.location}</td><td><button class="btn-delete" onclick="deleteUser('${doc.id}')">Smazat</button></td>`;
-                tbody.appendChild(tr);
+                let data = doc.data();
+                data.id = doc.id; // Uložení ID pro účely mazání
+                allUsersData.push(data);
             });
+            allUsersData.sort((a,b) => (b.date ? b.date.seconds : 0) - (a.date ? a.date.seconds : 0));
+            document.getElementById("total-users-count").innerText = allUsersData.length;
+            
+            // Zachování filtrů, pokud nějaké byly nastavené před smazáním
+            applyUsersFilters();
         });
-        
-        db.collection("search_history").orderBy("date", "desc").limit(50).get().then(snapshot => {
-            const hBody = document.getElementById("history-table-body");
-            hBody.innerHTML = "";
+
+        // Načtení historie tras
+        db.collection("search_history").get().then(snapshot => {
+            allHistoryData = [];
             snapshot.forEach(doc => {
-                const d = doc.data();
-                hBody.innerHTML += `<tr><td>${new Date(d.date.seconds*1000).toLocaleString()}</td><td>${d.name}</td><td>${d.pickup} → ${d.dropoff}</td><td>${d.userLocation}</td><td>${d.distance}km / ${d.price}Kč</td></tr>`;
+                let data = doc.data();
+                data.id = doc.id;
+                allHistoryData.push(data);
             });
+            allHistoryData.sort((a,b) => (b.date ? b.date.seconds : 0) - (a.date ? a.date.seconds : 0));
+            
+            applyHistoryFilters();
         });
     }
 
-    function deleteUser(id) {
-        if(confirm("Smazat uživatele?")) {
-            db.collection("registered_customers").doc(id).delete().then(() => loadStatistics());
+    // --- VYKRESLOVÁNÍ TABULEK ---
+    function renderUsersTable(dataArray) {
+        const tbody = document.getElementById("stats-table-body");
+        tbody.innerHTML = "";
+        if (dataArray.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:gray;">Žádné záznamy nenalezeny.</td></tr>`;
+            return;
+        }
+        dataArray.forEach(data => {
+            let dateStr = data.date ? new Date(data.date.seconds * 1000).toLocaleString('cs-CZ') : "Neznámý čas";
+            let tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${dateStr}</td>
+                <td><b>${data.fullName || "Neznámé"}</b></td>
+                <td><a href="tel:${data.phone}" class="admin-link">📞 ${data.phone || "-"}</a></td>
+                <td><a href="mailto:${data.email}" class="admin-link">✉️ ${data.email || "-"}</a></td>
+                <td>${data.device || "PC"}</td>
+                <td>${renderLocationLink(data.location)}</td>
+                <td><button class="btn-delete" onclick="deleteRecord('registered_customers', '${data.id}')">❌ Smazat</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderHistoryTable(dataArray) {
+        const hBody = document.getElementById("history-table-body");
+        hBody.innerHTML = "";
+        if (dataArray.length === 0) {
+            hBody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:gray;">Žádné záznamy nenalezeny.</td></tr>`;
+            return;
+        }
+        // Zobrazí max. prvních 200 pro výkon
+        dataArray.slice(0, 200).forEach(data => {
+            let dateStr = data.date ? new Date(data.date.seconds * 1000).toLocaleString('cs-CZ') : "Neznámý čas";
+            let tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${dateStr}</td>
+                <td><b>${data.name || "Neznámý"}</b></td>
+                <td><a href="tel:${data.phone}" class="admin-link">📞 ${data.phone || "-"}</a></td>
+                <td><a href="mailto:${data.email}" class="admin-link">✉️ ${data.email || "-"}</a></td>
+                <td><b>Z:</b> ${data.pickup}<br><b>Do:</b> ${data.dropoff}</td>
+                <td>${data.distance} km<br><b style="color:var(--green-primary);">${data.price} Kč</b></td>
+                <td>${renderLocationLink(data.userLocation)}</td>
+                <td><button class="btn-delete" onclick="deleteRecord('search_history', '${data.id}')">❌ Smazat</button></td>
+            `;
+            hBody.appendChild(tr);
+        });
+    }
+
+    // --- LOGIKA FILTRŮ ---
+    function filterData(dataArray, dateFromId, dateToId, searchId) {
+        let fromVal = document.getElementById(dateFromId).value;
+        let toVal = document.getElementById(dateToId).value;
+        let searchVal = document.getElementById(searchId).value.toLowerCase();
+
+        return dataArray.filter(item => {
+            // Kontrola fulltextu (Jméno, Telefon, E-mail)
+            let matchSearch = true;
+            if (searchVal) {
+                let name = (item.fullName || item.name || "").toLowerCase();
+                let phone = (item.phone || "").toLowerCase();
+                let email = (item.email || "").toLowerCase();
+                matchSearch = name.includes(searchVal) || phone.includes(searchVal) || email.includes(searchVal);
+            }
+
+            // Kontrola data
+            let matchDate = true;
+            if (fromVal || toVal) {
+                if (item.date) {
+                    let d = new Date(item.date.seconds * 1000);
+                    d.setHours(0,0,0,0);
+                    
+                    if (fromVal) {
+                        let f = new Date(fromVal); 
+                        f.setHours(0,0,0,0);
+                        if (d < f) matchDate = false;
+                    }
+                    if (toVal) {
+                        let t = new Date(toVal); 
+                        t.setHours(0,0,0,0);
+                        if (d > t) matchDate = false;
+                    }
+                } else {
+                    matchDate = false; 
+                }
+            }
+            return matchSearch && matchDate;
+        });
+    }
+
+    function applyUsersFilters() {
+        let filtered = filterData(allUsersData, "user-date-from", "user-date-to", "user-search");
+        renderUsersTable(filtered);
+    }
+    function resetUsersFilters() {
+        document.getElementById("user-date-from").value = "";
+        document.getElementById("user-date-to").value = "";
+        document.getElementById("user-search").value = "";
+        renderUsersTable(allUsersData);
+    }
+
+    function applyHistoryFilters() {
+        let filtered = filterData(allHistoryData, "hist-date-from", "hist-date-to", "hist-search");
+        renderHistoryTable(filtered);
+    }
+    function resetHistoryFilters() {
+        document.getElementById("hist-date-from").value = "";
+        document.getElementById("hist-date-to").value = "";
+        document.getElementById("hist-search").value = "";
+        renderHistoryTable(allHistoryData);
+    }
+
+    // --- MAPOVÝ ENGINE ---
+    const BASE_ADDRESS = "Msgre. B. Staška 76, Domažlice";
+    let baseCoords = L.latLng(49.440478, 12.932068); 
+    let currentMode = 'mimo'; 
+
+    const map = L.map('map', { zoomControl: false }).setView([49.4405, 12.9321], 14);
+    L.control.zoom({ position: 'topright' }).addTo(map); 
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(BASE_ADDRESS)}&countrycodes=cz`)
+    .then(res => res.json())
+    .then(data => { if (data && data.length > 0) { baseCoords = L.latLng(data[0].lat, data[0].lon); map.setView(baseCoords, 14); } });
+
+    let coordsData = { pickup: null, dropoff: null, waypoints: [] };
+    let tempMarkers = L.layerGroup().addTo(map); 
+    let routingControl = null;
+    let activeSelection = null;
+
+    function changeMode(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
+        document.getElementById(`mode-${mode}`).classList.add('active');
+        document.getElementById('formula-text').innerText = mode === 'mimo' ? "Výpočet: (Ujeté km × 13 Kč) + 20 Kč" : "Výpočet: (Ujeté km × 34 Kč) + 20 Kč nástupné";
+    }
+
+    function startMapSelection(type, inputId, wpIndex, e) {
+        if (e) e.stopPropagation();
+        const isAlreadyActive = e.currentTarget.classList.contains('active');
+        document.querySelectorAll('.btn-map-pick').forEach(b => b.classList.remove('active'));
+        activeSelection = null;
+        if (!isAlreadyActive) {
+            activeSelection = { type: type, inputId: inputId, wpIndex: wpIndex };
+            e.currentTarget.classList.add('active');
+            document.getElementById('map').style.cursor = 'crosshair';
         }
     }
 
-    // --- MAPA A POMOCNÉ FUNKCE (ZACHOVÁNY) ---
-    const map = L.map('map').setView([49.4405, 12.9321], 14);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
-    let coordsData = { pickup: null, dropoff: null };
-    let routingControl = null;
-    let currentMode = 'mimo';
-    function changeMode(m) { currentMode = m; document.querySelectorAll('.btn-mode').forEach(b=>b.classList.remove('active')); document.getElementById('mode-'+m).classList.add('active'); document.getElementById('formula-text').innerText = m === 'mimo' ? "Výpočet: (Ujeté km × 13 Kč) + 20 Kč" : "Výpočet: (Ujeté km × 34 Kč) + 20 Kč"; }
-    function startMapSelection(type, inputId, wpIndex, e) { activeSelection = { type, inputId }; document.getElementById('map').style.cursor = 'crosshair'; }
-    let activeSelection = null;
-    map.on('click', (e) => { 
-        if(!activeSelection) return; 
-        const {type, inputId} = activeSelection; 
-        document.getElementById(inputId).value = "Vybraný bod";
-        if(type === 'pickup') coordsData.pickup = e.latlng; else coordsData.dropoff = e.latlng;
-        activeSelection = null; 
+    map.on('click', function(e) {
+        if (!activeSelection) return;
+        const latlng = e.latlng;
+        const target = activeSelection;
+        document.querySelectorAll('.btn-map-pick').forEach(b => b.classList.remove('active'));
         document.getElementById('map').style.cursor = 'default';
-        L.marker(e.latlng).addTo(map);
+        activeSelection = null;
+        
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}`)
+        .then(res => res.json())
+        .then(data => {
+            let addressName = data && data.display_name ? data.display_name.split(',').slice(0, 2).join(',') : "Místo z mapy";
+            document.getElementById(target.inputId).value = addressName;
+            if (target.type === 'pickup') coordsData.pickup = latlng;
+            else if (target.type === 'dropoff') coordsData.dropoff = latlng;
+            else if (target.type === 'waypoint') coordsData.waypoints[target.wpIndex] = latlng;
+            
+            tempMarkers.clearLayers(); 
+            L.marker(latlng).addTo(tempMarkers).bindPopup(addressName).openPopup();
+        });
     });
-    function setupAutocomplete(inputId, listId, type) { /* zachováno dle originálu */ }
-    function downloadVCard() { /* zachováno dle originálu */ }
-    function handleAdminClick() { let p = prompt("Heslo:"); if(p==="263654"){ document.getElementById("admin-view").style.display="block"; loadStatistics(); } }
-    function closeAdmin() { document.getElementById("admin-view").style.display="none"; }
-    function addWaypoint() { /* zachováno dle originálu */ }
-    function logCallClick() { /* zachováno dle originálu */ }
-    function resetMemoryForTesting() { localStorage.clear(); location.reload(); }
+
+    function setupAutocomplete(inputId, listId, type, wpIndex = null) {
+        const input = document.getElementById(inputId);
+        const list = document.getElementById(listId);
+        let timeout;
+
+        input.addEventListener('input', function() {
+            clearTimeout(timeout);
+            list.innerHTML = '';
+            if (!this.value) return;
+
+            timeout = setTimeout(() => {
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${this.value}&countrycodes=cz`)
+                .then(response => response.json())
+                .then(data => {
+                    list.innerHTML = '';
+                    data.slice(0, 5).forEach(item => { 
+                        let div = document.createElement('div');
+                        div.className = 'autocomplete-item';
+                        div.innerText = item.display_name;
+                        div.onclick = () => {
+                            let shortName = item.display_name.split(',').slice(0, 2).join(','); 
+                            input.value = shortName; 
+                            list.innerHTML = ''; 
+                            let latlng = L.latLng(item.lat, item.lon);
+                            if (type === 'pickup') coordsData.pickup = latlng;
+                            else if (type === 'dropoff') coordsData.dropoff = latlng;
+                            else if (type === 'waypoint') coordsData.waypoints[wpIndex] = latlng;
+
+                            tempMarkers.clearLayers(); 
+                            L.marker(latlng).addTo(tempMarkers).bindPopup(shortName).openPopup();
+                            map.flyTo(latlng, 14); 
+                        };
+                        list.appendChild(div);
+                    });
+                });
+            }, 400);
+        });
+    }
+
+    setupAutocomplete('pickup', 'pickup-list', 'pickup');
+    setupAutocomplete('dropoff', 'dropoff-list', 'dropoff');
+
+    let wpCounter = 0;
+    function addWaypoint() {
+        const id = wpCounter++;
+        const container = document.getElementById('waypoints-container');
+        const wrapper = document.createElement('div');
+        wrapper.className = 'input-wrapper-wp';
+        wrapper.innerHTML = `
+            <label style="color: var(--text-muted);">Průjezdný bod</label>
+            <div class="input-row">
+                <div class="input-wrapper">
+                    <input type="text" id="wp-input-${id}" placeholder="Začněte psát..." autocomplete="off">
+                    <div id="wp-list-${id}" class="autocomplete-list"></div>
+                </div>
+                <button class="btn-map-pick" onclick="startMapSelection('waypoint', 'wp-input-${id}', ${id}, event)">📍</button>
+            </div>
+        `;
+        container.appendChild(wrapper);
+        setupAutocomplete(`wp-input-${id}`, `wp-list-${id}`, 'waypoint', id);
+    }
+
+    let lastLogTime = 0; 
+
+    function calculateRoute() {
+        if (!coordsData.pickup || !coordsData.dropoff) {
+            alert("Vyberte prosím místo nakládky a vykládky.");
+            return;
+        }
+        
+        tempMarkers.clearLayers();
+        let finalPoints = [];
+
+        if (currentMode === 'mimo') {
+            finalPoints.push(baseCoords, coordsData.pickup);
+            coordsData.waypoints.forEach(wp => { if (wp) finalPoints.push(wp); });
+            finalPoints.push(coordsData.dropoff, baseCoords);
+        } else {
+            finalPoints.push(coordsData.pickup);
+            coordsData.waypoints.forEach(wp => { if (wp) finalPoints.push(wp); });
+            finalPoints.push(coordsData.dropoff);
+        }
+
+        if (routingControl) map.removeControl(routingControl);
+
+        const carIcon = L.divIcon({
+            html: '<div style="font-size: 26px; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.4));">🚖</div>',
+            className: 'custom-car-marker', iconSize: [32, 32], iconAnchor: [16, 16]
+        });
+
+        routingControl = L.Routing.control({
+            waypoints: finalPoints,
+            router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1', routingOptions: { continue_straight: false, alternatives: true } }),
+            lineOptions: { styles: [{ color: '#00cc44', opacity: 0.9, weight: 8 }] }, 
+            fitSelectedRoutes: true, show: false,
+            createMarker: function(i, wp, nWps) {
+                let label = "Bod trasy";
+                if (currentMode === 'mimo') {
+                    if (i === 0 || i === nWps - 1) return L.marker(wp.latLng, { icon: carIcon }).bindPopup(i === 0 ? "<b>Základna Staška 76</b>" : "<b>Návrat na základnu</b>");
+                    label = i === 1 ? "Místo nakládky" : (i === nWps - 2 ? "Místo vykládky" : "Průjezdný bod");
+                } else {
+                    if (i === 0) return L.marker(wp.latLng, { icon: carIcon }).bindPopup("<b>Místo nakládky (Vozidlo startuje)</b>");
+                    label = i === nWps - 1 ? "Místo vykládky" : "Průjezdný bod";
+                }
+                return L.marker(wp.latLng).bindPopup(`<b>${label}</b>`);
+            }
+        }).addTo(map);
+
+        routingControl.on('routesfound', function(e) {
+            e.routes.sort((a, b) => a.summary.totalDistance - b.summary.totalDistance);
+            let shortestRoute = e.routes[0];
+            let distanceInKm = (shortestRoute.summary.totalDistance / 1000).toFixed(1);
+            let totalPrice = currentMode === 'mimo' ? Math.round((distanceInKm * 13) + 20) : Math.round((distanceInKm * 34) + 20);
+
+            document.getElementById('dist-val').innerText = distanceInKm;
+            document.getElementById('price-val').innerText = totalPrice.toLocaleString('cs-CZ');
+
+            let now = Date.now();
+            if (db && (now - lastLogTime > 3000)) {
+                lastLogTime = now;
+                
+                let saveHistory = (loc) => {
+                    db.collection("search_history").add({
+                        date: new Date(),
+                        name: localStorage.getItem('taxi_green_name') || "Neznámý uživatel",
+                        phone: localStorage.getItem('taxi_green_phone') || "Neznámé číslo",
+                        email: localStorage.getItem('taxi_green_email') || "Bez e-mailu",
+                        pickup: document.getElementById('pickup').value || "Bod na mapě",
+                        dropoff: document.getElementById('dropoff').value || "Bod na mapě",
+                        distance: distanceInKm,
+                        price: totalPrice,
+                        mode: currentMode,
+                        userLocation: loc
+                    }).catch(err => console.log("Nelze zapsat historii:", err));
+                };
+
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        pos => saveHistory(`GPS: ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`),
+                        err => saveHistory("Nelze zjistit"),
+                        { timeout: 5000, maximumAge: 60000 }
+                    );
+                } else {
+                    saveHistory("Zařízení nepodporuje GPS");
+                }
+            }
+        });
+    }
+    window.addEventListener('resize', () => { map.invalidateSize(); });
 </script>
 </body>
 </html>
