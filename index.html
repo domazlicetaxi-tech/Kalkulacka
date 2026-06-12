@@ -25,14 +25,11 @@
             --danger-red: #ef4444;
         }
 
-        /* ODSTRANĚN FIXED POSITION PRO BODY - umožňuje přirozené scrollování na mobilu */
         html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; }
         
-        /* Na PC drží fullscreen */
         #app-container { display: flex; height: 100dvh; width: 100vw; flex-direction: row; overflow: hidden; }
         #panel { width: 400px; height: 100%; background: white; box-shadow: 4px 0 15px rgba(0,0,0,0.1); z-index: 1000; display: flex; flex-direction: column; flex-shrink: 0; }
         
-        /* Hlavička */
         .header { background: var(--green-primary); padding: 15px 20px; color: white; text-align: center; flex-shrink: 0; position: relative; }
         .header h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; cursor: pointer; }
         
@@ -47,7 +44,6 @@
         .btn-call { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; background: var(--green-light); color: white; text-decoration: none; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
         .btn-vcard { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; background: #ffffff; color: var(--green-primary); border: none; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
 
-        /* Vstupy */
         .input-section { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 15px 20px; background: #ffffff; }
         label { font-weight: 700; font-size: 13px; color: var(--green-dark); display: block; margin-bottom: 4px; text-transform: uppercase; }
         .input-row { display: flex; gap: 6px; margin-bottom: 12px; position: relative; }
@@ -64,7 +60,6 @@
         .autocomplete-item:hover { background-color: var(--green-bg); color: var(--green-primary); font-weight: 600; }
         .btn-add { background: none; border: 2px dashed #cbd5e1; color: var(--text-muted); width: 100%; padding: 8px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 15px; }
 
-        /* Patička s cenou */
         .action-section { padding: 15px 20px; background: var(--green-bg); border-top: 2px solid #bbf7d0; flex-shrink: 0; }
         .btn-calc { width: 100%; padding: 14px; background: var(--green-primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 16px; text-transform: uppercase; transition: background 0.2s; box-shadow: 0 4px 6px rgba(21,128,61,0.2); }
         .btn-calc:hover { background: var(--green-dark); }
@@ -75,7 +70,6 @@
 
         #map { flex: 1; height: 100%; width: 100%; z-index: 1; }
 
-        /* OKNO REGISTRACE ZÁKAZNÍKA */
         #registration-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 5000; padding: 25px 20px; box-sizing: border-box; overflow-y: auto; }
         .reg-title { color: var(--green-dark); font-size: 20px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; border-bottom: 2px solid var(--green-primary); padding-bottom: 8px; }
         .reg-info { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
@@ -83,51 +77,39 @@
         .btn-reg-submit { width: 100%; padding: 14px; background: var(--green-primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; text-transform: uppercase; margin-top: 10px; box-shadow: 0 4px 6px rgba(21,128,61,0.2); }
         .btn-reg-submit:disabled { background: #94a3b8; cursor: not-allowed; }
 
-        /* OKNO ADMINISTRACE STATISTIK */
         #admin-view { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: white; z-index: 99999; padding: 20px; box-sizing: border-box; overflow-y: auto; }
         .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--green-primary); padding-bottom: 10px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .stat-card { background: var(--green-bg); padding: 20px; border-radius: 8px; border-left: 5px solid var(--green-primary); margin-bottom: 20px; font-size: 18px; font-weight: bold; color: var(--green-dark); }
         .admin-section-title { margin-top: 30px; margin-bottom: 10px; color: var(--green-primary); border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; font-size: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;}
         .admin-filters { display: flex; gap: 10px; align-items: center; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; flex-wrap: wrap;}
         .admin-filters input { padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; }
-        .admin-filters .btn-filter { background: var(--green-primary); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
         .admin-filters .btn-filter-reset { background: #64748b; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
         .admin-table-container { overflow-x: auto; margin-bottom: 40px; }
-        table { width: 100%; border-collapse: collapse; min-width: 900px; }
-        th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: left; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-size: 13px; }
         th { background: #f1f5f9; font-weight: bold; }
         tr:nth-child(even) { background: #f8fafc; }
         .btn-back { background: #64748b; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         a.admin-link { color: var(--green-primary); text-decoration: none; font-weight: bold; }
         a.admin-link:hover { text-decoration: underline; }
-        .btn-delete { background: white; color: var(--danger-red); border: 1px solid var(--danger-red); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; }
-        .btn-delete:hover { background: var(--danger-red); color: white; }
+        .btn-delete { background: white; border: 1px solid #cbd5e1; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 16px; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-delete:hover { background: #f1f5f9; border-color: var(--danger-red); }
 
-        /* 📱 RESPONSIVNÍ ROZLOŽENÍ PRO MOBILNÍ TELEFONY */
         @media (max-width: 768px) {
             html, body { height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
             #app-container { flex-direction: column; height: auto; min-height: 100vh; overflow: visible; display: block; }
-            
-            /* Panel je nahoře nad mapou, přirozeně se posouvá (scroluje) */
             #panel { width: 100%; height: auto; order: 1; border-top: none; position: relative; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: visible; flex: none; display: block; }
-            
-            /* Zmenšená hlavička, aby zbylo místo na formulář */
             .header { padding: 12px 15px; }
             .header h1 { font-size: 22px; margin-bottom: 8px; }
             .mode-toggle { margin-bottom: 8px; }
             .btn-mode { padding: 8px 4px; font-size: 12px; }
             .disclaimer { padding: 8px; gap: 6px; }
             .disclaimer span { font-size: 11px; text-align: center; margin-bottom: 2px; }
-            
-            /* Formulář - viditelný přepad, větší pole pro snadné kliknutí */
             .input-section { padding: 15px; overflow: visible; }
             input[type="text"], input[type="tel"], input[type="email"] { padding: 12px; font-size: 15px; }
             .btn-map-pick { padding: 0 15px; }
-            
             .action-section { padding: 15px; }
             .btn-calc { padding: 14px; font-size: 16px; }
-
-            /* Mapa je dole, nikdy nepřekryje adresy */
             #map { width: 100%; height: 50vh; min-height: 350px; order: 2; z-index: 1; display: block; flex: none; }
         }
     </style>
@@ -235,72 +217,67 @@
 
     <h3 class="admin-section-title">
         Historie vypočítaných tras
-        <button class="btn-delete" style="font-size: 14px; padding: 8px 15px;" onclick="deleteAllRecords('search_history')">🗑️ Smazat celou historii</button>
+        <button class="btn-delete" style="font-size: 14px; padding: 6px 12px; border-color: var(--danger-red); color: var(--danger-red);" onclick="deleteAllRecords('search_history')">🗑️ Smazat historii</button>
     </h3>
     <div class="admin-filters">
         <label style="font-size: 12px; margin-right: -5px;">Od:</label>
-        <input type="date" id="hist-date-from">
+        <input type="date" id="hist-date-from" onchange="applyHistoryFilters()">
         <label style="font-size: 12px; margin-right: -5px; margin-left: 5px;">Do:</label>
-        <input type="date" id="hist-date-to">
-        <input type="text" id="hist-search" placeholder="Hledat jméno, tel., e-mail..." style="width: 200px;">
-        <button class="btn-filter" onclick="applyHistoryFilters()">Filtrovat</button>
+        <input type="date" id="hist-date-to" onchange="applyHistoryFilters()">
+        <input type="text" id="hist-search" placeholder="Hledat jméno, tel., e-mail..." style="width: 200px;" oninput="applyHistoryFilters()">
         <button class="btn-filter-reset" onclick="resetHistoryFilters()">Zrušit filtr</button>
     </div>
     <div class="admin-table-container">
         <table>
             <thead>
                 <tr>
-                    <th>Datum a čas</th>
+                    <th>Datum<br><span style="font-weight:normal;font-size:11px;">Čas</span></th>
                     <th>Zákazník</th>
-                    <th>Telefon</th>
-                    <th>E-mail</th>
+                    <th>Kontakt</th>
                     <th>Hledaná trasa</th>
-                    <th>Vzdálenost a Cena</th>
-                    <th>Poloha při hledání (Mapa)</th>
+                    <th>Vzdál.<br><span style="font-weight:normal;font-size:11px;">Cena</span></th>
+                    <th>Poloha<br><span style="font-weight:normal;font-size:11px;">(GPS)</span></th>
                     <th>Akce</th>
                 </tr>
             </thead>
             <tbody id="history-table-body">
-                <tr><td colspan="8" style="text-align:center; color:gray;">Načítám historii kalkulací...</td></tr>
+                <tr><td colspan="7" style="text-align:center; color:gray;">Načítám historii kalkulací...</td></tr>
             </tbody>
         </table>
     </div>
 
     <h3 class="admin-section-title">
         Evidence registrovaných uživatelů
-        <button class="btn-delete" style="font-size: 14px; padding: 8px 15px;" onclick="deleteAllRecords('registered_customers')">🗑️ Smazat všechny uživatele</button>
+        <button class="btn-delete" style="font-size: 14px; padding: 6px 12px; border-color: var(--danger-red); color: var(--danger-red);" onclick="deleteAllRecords('registered_customers')">🗑️ Smazat uživatele</button>
     </h3>
     <div class="admin-filters">
         <label style="font-size: 12px; margin-right: -5px;">Od:</label>
-        <input type="date" id="user-date-from">
+        <input type="date" id="user-date-from" onchange="applyUsersFilters()">
         <label style="font-size: 12px; margin-right: -5px; margin-left: 5px;">Do:</label>
-        <input type="date" id="user-date-to">
-        <input type="text" id="user-search" placeholder="Hledat jméno, tel., e-mail..." style="width: 200px;">
-        <button class="btn-filter" onclick="applyUsersFilters()">Filtrovat</button>
+        <input type="date" id="user-date-to" onchange="applyUsersFilters()">
+        <input type="text" id="user-search" placeholder="Hledat jméno, tel., e-mail..." style="width: 200px;" oninput="applyUsersFilters()">
         <button class="btn-filter-reset" onclick="resetUsersFilters()">Zrušit filtr</button>
     </div>
     <div class="admin-table-container">
         <table>
             <thead>
                 <tr>
-                    <th>Datum registrace</th>
-                    <th>Jméno a Příjmení</th>
-                    <th>Telefon</th>
-                    <th>E-mailová adresa</th>
+                    <th>Datum<br><span style="font-weight:normal;font-size:11px;">Čas</span></th>
+                    <th>Zákazník</th>
+                    <th>Kontakt</th>
                     <th>Zařízení</th>
-                    <th>Poloha při registraci (Mapa)</th>
+                    <th>Poloha<br><span style="font-weight:normal;font-size:11px;">(GPS)</span></th>
                     <th>Akce</th>
                 </tr>
             </thead>
             <tbody id="stats-table-body">
-                <tr><td colspan="7" style="text-align:center; color:gray;">Načítám zákazníky...</td></tr>
+                <tr><td colspan="6" style="text-align:center; color:gray;">Načítám zákazníky...</td></tr>
             </tbody>
         </table>
     </div>
 </div>
 
 <script>
-    // --- NASTAVENÍ FIREBASE DATABÁZE ---
     const firebaseConfig = {
         apiKey: "AIzaSyBU-wAdjtrC3wwkTulv432KfVVghnujYfg",
         authDomain: "kalkula-641ff.firebaseapp.com",
@@ -314,12 +291,10 @@
     try {
         firebase.initializeApp(firebaseConfig);
         db = firebase.firestore();
-        console.log("Firebase databáze úspěšně připojena!");
     } catch (error) {
-        console.error("Chyba databáze, ale kalkulačka běží dál:", error);
+        console.error("Chyba databáze:", error);
     }
 
-    // --- KONTROLA REGISTRACE PŘI NAČTENÍ ---
     window.addEventListener('DOMContentLoaded', () => {
         const isRegistered = localStorage.getItem('taxi_green_registered') === 'true';
         const hasName = localStorage.getItem('taxi_green_name');
@@ -336,7 +311,7 @@
         resetClicks++;
         if (resetClicks >= 5) {
             localStorage.clear();
-            alert("PAMĚŤ BYLA VYMAZÁNA! Stránka se nyní obnoví a vy si můžete vyzkoušet proces jako nový uživatel.");
+            alert("PAMĚŤ BYLA VYMAZÁNA! Stránka se nyní obnoví.");
             location.reload();
         }
         setTimeout(() => resetClicks = 0, 3000);
@@ -361,22 +336,21 @@
         const gdpr = document.getElementById('reg-gdpr').checked;
 
         if (!name || !surname || !phone || !email) {
-            alert('Pro dokončení registrace a výpočet trasy vyplňte prosím všechna pole (Jméno, Příjmení, Telefon, E-mail).');
+            alert('Pro dokončení registrace vyplňte prosím všechna pole.');
             return;
         }
 
-        // --- ZPŘÍSNĚNÁ VALIDACE E-MAILU ---
         const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
         const blockedDomains = ['tempmail.com', '10minutemail.com', 'guerrillamail.com', 'yopmail.com', 'mailinator.com', 'throwawaymail.com'];
         const emailDomain = email.split('@')[1];
 
         if (!emailRegex.test(email)) {
-            alert('Zadejte prosím reálnou a platnou e-mailovou adresu (např. jmeno@email.cz).');
+            alert('Zadejte prosím reálnou a platnou e-mailovou adresu.');
             return;
         }
 
         if (emailDomain && blockedDomains.includes(emailDomain.toLowerCase())) {
-            alert('Použití jednorázových e-mailových adres není povoleno. Použijte prosím svůj reálný e-mail.');
+            alert('Použití jednorázových e-mailových adres není povoleno.');
             return;
         }
         
@@ -425,8 +399,7 @@
             map.flyTo(latlng, 14);
 
         } catch (error) {
-            console.warn("Chyba GPS / Poloha zamítnuta.");
-            alert("Kalkulačku nelze použít bez povolení GPS polohy. Prosím, povolte přístup k poloze v nastavení vašeho prohlížeče a zkuste to znovu.");
+            alert("Kalkulačku nelze použít bez povolení GPS polohy.");
             btn.innerText = originalBtnText;
             btn.disabled = false;
             return; 
@@ -443,7 +416,6 @@
             }).then(() => {
                 completeRegistrationWorkflow(fullName, phone, email);
             }).catch(err => {
-                console.error("Firebase zápis selhal:", err);
                 completeRegistrationWorkflow(fullName, phone, email); 
             });
         } else {
@@ -468,7 +440,7 @@
         if (coordsData.pickup && coordsData.dropoff) {
             calculateRoute();
         } else {
-            alert("Registrace byla úspěšná! Nyní prosím zadejte trasu a stiskněte 'Vypočítat trasu'.");
+            alert("Registrace byla úspěšná! Nyní zadejte trasu a stiskněte 'Vypočítat trasu'.");
         }
     }
 
@@ -486,16 +458,11 @@
 
     function logCallClick() {
         if (!db) return;
-        try {
-            db.collection("call_clicks").add({ timestamp: new Date(), device: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? "Mobil" : "PC" });
-        } catch(e){}
+        try { db.collection("call_clicks").add({ timestamp: new Date(), device: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? "Mobil" : "PC" }); } catch(e){}
     }
 
-    // --- SPRÁVA ADMINISTRACE A FILTRY ---
     let titleClickCount = 0;
     let titleClickTimeout;
-    
-    // Globální pole pro uložení načtených dat
     let allUsersData = [];
     let allHistoryData = [];
 
@@ -506,11 +473,7 @@
         if (titleClickCount === 5) {
             titleClickCount = 0;
             let password = prompt("Vstup do administrace.\nZadejte přístupové heslo:");
-            if (password === "26 3654") {
-                openAdmin();
-            } else if (password !== null) {
-                alert("Nesprávné heslo!");
-            }
+            if (password === "26 3654") { openAdmin(); } else if (password !== null) { alert("Nesprávné heslo!"); }
         }
         titleClickTimeout = setTimeout(() => { titleClickCount = 0; }, 2000);
     }
@@ -528,173 +491,143 @@
     }
 
     function renderLocationLink(locStr) {
-        if (!locStr) return '<span style="color:gray;">Neznámá poloha</span>';
+        if (!locStr || locStr === "Nelze zjistit" || locStr === "Zařízení nepodporuje GPS") return '<span style="color:gray; font-size:12px;">Neznámá</span>';
         let query = encodeURIComponent(locStr.replace("GPS:", "").trim());
-        return `<a href="https://www.google.com/maps/search/?api=1&query=${query}" target="_blank" class="admin-link">📍 Zobrazit na mapě<br><span style="font-size: 11px; font-weight: normal; color: gray;">${locStr}</span></a>`;
+        return `<a href="https://www.google.com/maps/search/?api=1&query=$${query}" target="_blank" class="btn-map-pick" style="padding: 4px 8px; text-decoration: none; display: inline-block; background: white;" title="${locStr}">📍</a>`;
     }
 
-    // --- MAZÁNÍ ZÁZNAMŮ ---
     function deleteRecord(collectionName, docId) {
         if (!db) return;
-        if (confirm("Opravdu chcete tento záznam trvale smazat? Tuto akci nelze vrátit.")) {
-            db.collection(collectionName).doc(docId).delete().then(() => {
-                loadStatistics(); // Znovu načte a vykreslí tabulky po smazání
-            }).catch(err => {
-                console.error("Chyba při mazání dokumentu: ", err);
-                alert("Došlo k chybě při mazání záznamu.");
-            });
+        if (confirm("Opravdu chcete tento záznam trvale smazat?")) {
+            db.collection(collectionName).doc(docId).delete().then(() => { loadStatistics(); });
         }
     }
 
-    // --- HROMADNÉ MAZÁNÍ (SMAZAT VŠE) ---
     async function deleteAllRecords(collectionName) {
         if (!db) return;
-        
         let collectionLabel = collectionName === 'search_history' ? 'HISTORII TRAS' : 'REGISTROVANÉ UŽIVATELE';
-
-        // 1. Dvojité potvrzení
-        if (!confirm(`⚠️ VAROVÁNÍ: Opravdu chcete trvale smazat KOMPLETNĚ VŠECHNY záznamy pro ${collectionLabel}? Tuto akci NELZE vrátit zpět!`)) {
-            return;
-        }
-
-        // 2. Bezpečnostní pojistka heslem
-        let password = prompt("Pro potvrzení hromadného smazání zadejte administrátorské heslo:");
-        if (password !== "26 3654") {
-            alert("Nesprávné heslo. Mazání bylo zrušeno.");
-            return;
-        }
+        if (!confirm(`⚠️ VAROVÁNÍ: Opravdu chcete smazat VŠECHNY záznamy pro ${collectionLabel}?`)) return;
+        let password = prompt("Pro potvrzení smazání zadejte heslo:");
+        if (password !== "26 3654") return alert("Nesprávné heslo.");
 
         try {
             document.body.style.cursor = 'wait';
-            
             const snapshot = await db.collection(collectionName).get();
-            if (snapshot.empty) {
-                alert("Tato sekce je již prázdná.");
-                document.body.style.cursor = 'default';
-                return;
-            }
-
-            // Firestore umožňuje smazat maximálně 500 dokumentů v jedné dávce (batch)
-            let batches = [];
-            let currentBatch = db.batch();
-            let count = 0;
-
+            if (snapshot.empty) { alert("Již prázdné."); document.body.style.cursor = 'default'; return; }
+            let batches = [], currentBatch = db.batch(), count = 0;
             snapshot.docs.forEach((doc) => {
-                currentBatch.delete(doc.ref);
-                count++;
-                if (count === 500) {
-                    batches.push(currentBatch.commit());
-                    currentBatch = db.batch();
-                    count = 0;
-                }
+                currentBatch.delete(doc.ref); count++;
+                if (count === 500) { batches.push(currentBatch.commit()); currentBatch = db.batch(); count = 0; }
             });
-
-            if (count > 0) {
-                batches.push(currentBatch.commit());
-            }
-
-            await Promise.all(batches); // Počkáme na dokončení všech dávek
-            
+            if (count > 0) batches.push(currentBatch.commit());
+            await Promise.all(batches); 
             document.body.style.cursor = 'default';
-            alert(`Úspěšně smazáno všech ${snapshot.size} záznamů.`);
-            loadStatistics(); // Znovu načte a vyčistí tabulky
-            
+            alert(`Smazáno ${snapshot.size} záznamů.`);
+            loadStatistics(); 
         } catch (err) {
-            console.error("Chyba při hromadném mazání: ", err);
-            document.body.style.cursor = 'default';
-            alert("Došlo k chybě při mazání databáze. Zkuste to prosím znovu.");
+            document.body.style.cursor = 'default'; alert("Chyba při mazání.");
         }
     }
 
     function loadStatistics() {
         if (!db) return;
-
-        // Načtení uživatelů
         db.collection("registered_customers").get().then(snapshot => {
             allUsersData = [];
-            snapshot.forEach(doc => {
-                let data = doc.data();
-                data.id = doc.id; // Uložení ID pro účely mazání
-                allUsersData.push(data);
-            });
+            snapshot.forEach(doc => { let data = doc.data(); data.id = doc.id; allUsersData.push(data); });
             allUsersData.sort((a,b) => (b.date ? b.date.seconds : 0) - (a.date ? a.date.seconds : 0));
             document.getElementById("total-users-count").innerText = allUsersData.length;
-            
-            // Zachování filtrů, pokud nějaké byly nastavené před smazáním
             applyUsersFilters();
         });
-
-        // Načtení historie tras
         db.collection("search_history").get().then(snapshot => {
             allHistoryData = [];
-            snapshot.forEach(doc => {
-                let data = doc.data();
-                data.id = doc.id;
-                allHistoryData.push(data);
-            });
+            snapshot.forEach(doc => { let data = doc.data(); data.id = doc.id; allHistoryData.push(data); });
             allHistoryData.sort((a,b) => (b.date ? b.date.seconds : 0) - (a.date ? a.date.seconds : 0));
-            
             applyHistoryFilters();
         });
     }
 
-    // --- VYKRESLOVÁNÍ TABULEK ---
     function renderUsersTable(dataArray) {
         const tbody = document.getElementById("stats-table-body");
         tbody.innerHTML = "";
-        if (dataArray.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:gray;">Žádné záznamy nenalezeny.</td></tr>`;
-            return;
-        }
+        if (dataArray.length === 0) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:gray;">Žádné záznamy nenalezeny.</td></tr>`; return; }
         dataArray.forEach(data => {
-            let dateStr = data.date ? new Date(data.date.seconds * 1000).toLocaleString('cs-CZ') : "Neznámý čas";
+            let dateHtml = "Neznámý čas";
+            if (data.date) {
+                let d = new Date(data.date.seconds * 1000);
+                dateHtml = `${d.toLocaleDateString('cs-CZ')}<br><span style="color:gray; font-size:11px;">${d.toLocaleTimeString('cs-CZ')}</span>`;
+            }
             let tr = document.createElement("tr");
             tr.innerHTML = `
-                <td>${dateStr}</td>
+                <td>${dateHtml}</td>
                 <td><b>${data.fullName || "Neznámé"}</b></td>
-                <td><a href="tel:${data.phone}" class="admin-link">📞 ${data.phone || "-"}</a></td>
-                <td><a href="mailto:${data.email}" class="admin-link">✉️ ${data.email || "-"}</a></td>
+                <td><a href="tel:${data.phone}" class="admin-link">📞 ${data.phone || "-"}</a><br><a href="mailto:${data.email}" class="admin-link">✉️ ${data.email || "-"}</a></td>
                 <td>${data.device || "PC"}</td>
-                <td>${renderLocationLink(data.location)}</td>
-                <td><button class="btn-delete" onclick="deleteRecord('registered_customers', '${data.id}')">❌ Smazat</button></td>
+                <td style="text-align:center;">${renderLocationLink(data.location)}</td>
+                <td style="text-align:center;"><button class="btn-delete" title="Smazat" onclick="deleteRecord('registered_customers', '${data.id}')">🗑️</button></td>
             `;
             tbody.appendChild(tr);
         });
     }
 
+    window.showRouteFromHistory = async function(pickupStr, dropoffStr) {
+        closeAdmin();
+        document.getElementById('pickup').value = pickupStr;
+        document.getElementById('dropoff').value = dropoffStr;
+        
+        try {
+            let pRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(pickupStr)}&countrycodes=cz`);
+            let pData = await pRes.json();
+            if (pData && pData.length > 0) coordsData.pickup = L.latLng(pData[0].lat, pData[0].lon);
+
+            let dRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(dropoffStr)}&countrycodes=cz`);
+            let dData = await dRes.json();
+            if (dData && dData.length > 0) coordsData.dropoff = L.latLng(dData[0].lat, dData[0].lon);
+            
+            if (coordsData.pickup && coordsData.dropoff) {
+                calculateRoute();
+            } else {
+                alert("Nepodařilo se přesně dohledat tuto trasu v mapových podkladech.");
+            }
+        } catch(e) {
+            console.error(e);
+            alert("Chyba při načítání trasy z mapy.");
+        }
+    };
+
     function renderHistoryTable(dataArray) {
         const hBody = document.getElementById("history-table-body");
         hBody.innerHTML = "";
-        if (dataArray.length === 0) {
-            hBody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:gray;">Žádné záznamy nenalezeny.</td></tr>`;
-            return;
-        }
-        // Zobrazí max. prvních 200 pro výkon
+        if (dataArray.length === 0) { hBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:gray;">Žádné záznamy nenalezeny.</td></tr>`; return; }
+        
         dataArray.slice(0, 200).forEach(data => {
-            let dateStr = data.date ? new Date(data.date.seconds * 1000).toLocaleString('cs-CZ') : "Neznámý čas";
+            let dateHtml = "Neznámý čas";
+            if (data.date) {
+                let d = new Date(data.date.seconds * 1000);
+                dateHtml = `${d.toLocaleDateString('cs-CZ')}<br><span style="color:gray; font-size:11px;">${d.toLocaleTimeString('cs-CZ')}</span>`;
+            }
             let tr = document.createElement("tr");
             tr.innerHTML = `
-                <td>${dateStr}</td>
+                <td>${dateHtml}</td>
                 <td><b>${data.name || "Neznámý"}</b></td>
                 <td><a href="tel:${data.phone}" class="admin-link">📞 ${data.phone || "-"}</a></td>
-                <td><a href="mailto:${data.email}" class="admin-link">✉️ ${data.email || "-"}</a></td>
-                <td><b>Z:</b> ${data.pickup}<br><b>Do:</b> ${data.dropoff}</td>
+                <td>
+                    <b>Z:</b> ${data.pickup}<br><b>Do:</b> ${data.dropoff}<br>
+                    <button style="margin-top:4px; background:white; border:1px solid #cbd5e1; padding:3px 6px; font-size:11px; border-radius:4px; cursor:pointer;" onclick="showRouteFromHistory('${data.pickup}', '${data.dropoff}')">🗺️ Mapa</button>
+                </td>
                 <td>${data.distance} km<br><b style="color:var(--green-primary);">${data.price} Kč</b></td>
-                <td>${renderLocationLink(data.userLocation)}</td>
-                <td><button class="btn-delete" onclick="deleteRecord('search_history', '${data.id}')">❌ Smazat</button></td>
+                <td style="text-align:center;">${renderLocationLink(data.userLocation)}</td>
+                <td style="text-align:center;"><button class="btn-delete" title="Smazat" onclick="deleteRecord('search_history', '${data.id}')">🗑️</button></td>
             `;
             hBody.appendChild(tr);
         });
     }
 
-    // --- LOGIKA FILTRŮ ---
     function filterData(dataArray, dateFromId, dateToId, searchId) {
         let fromVal = document.getElementById(dateFromId).value;
         let toVal = document.getElementById(dateToId).value;
         let searchVal = document.getElementById(searchId).value.toLowerCase();
 
         return dataArray.filter(item => {
-            // Kontrola fulltextu (Jméno, Telefon, E-mail)
             let matchSearch = true;
             if (searchVal) {
                 let name = (item.fullName || item.name || "").toLowerCase();
@@ -702,55 +635,24 @@
                 let email = (item.email || "").toLowerCase();
                 matchSearch = name.includes(searchVal) || phone.includes(searchVal) || email.includes(searchVal);
             }
-
-            // Kontrola data
             let matchDate = true;
             if (fromVal || toVal) {
                 if (item.date) {
                     let d = new Date(item.date.seconds * 1000);
                     d.setHours(0,0,0,0);
-                    
-                    if (fromVal) {
-                        let f = new Date(fromVal); 
-                        f.setHours(0,0,0,0);
-                        if (d < f) matchDate = false;
-                    }
-                    if (toVal) {
-                        let t = new Date(toVal); 
-                        t.setHours(0,0,0,0);
-                        if (d > t) matchDate = false;
-                    }
-                } else {
-                    matchDate = false; 
-                }
+                    if (fromVal) { let f = new Date(fromVal); f.setHours(0,0,0,0); if (d < f) matchDate = false; }
+                    if (toVal) { let t = new Date(toVal); t.setHours(0,0,0,0); if (d > t) matchDate = false; }
+                } else { matchDate = false; }
             }
             return matchSearch && matchDate;
         });
     }
 
-    function applyUsersFilters() {
-        let filtered = filterData(allUsersData, "user-date-from", "user-date-to", "user-search");
-        renderUsersTable(filtered);
-    }
-    function resetUsersFilters() {
-        document.getElementById("user-date-from").value = "";
-        document.getElementById("user-date-to").value = "";
-        document.getElementById("user-search").value = "";
-        renderUsersTable(allUsersData);
-    }
+    function applyUsersFilters() { let filtered = filterData(allUsersData, "user-date-from", "user-date-to", "user-search"); renderUsersTable(filtered); }
+    function resetUsersFilters() { document.getElementById("user-date-from").value = ""; document.getElementById("user-date-to").value = ""; document.getElementById("user-search").value = ""; renderUsersTable(allUsersData); }
+    function applyHistoryFilters() { let filtered = filterData(allHistoryData, "hist-date-from", "hist-date-to", "hist-search"); renderHistoryTable(filtered); }
+    function resetHistoryFilters() { document.getElementById("hist-date-from").value = ""; document.getElementById("hist-date-to").value = ""; document.getElementById("hist-search").value = ""; renderHistoryTable(allHistoryData); }
 
-    function applyHistoryFilters() {
-        let filtered = filterData(allHistoryData, "hist-date-from", "hist-date-to", "hist-search");
-        renderHistoryTable(filtered);
-    }
-    function resetHistoryFilters() {
-        document.getElementById("hist-date-from").value = "";
-        document.getElementById("hist-date-to").value = "";
-        document.getElementById("hist-search").value = "";
-        renderHistoryTable(allHistoryData);
-    }
-
-    // --- MAPOVÝ ENGINE ---
     const BASE_ADDRESS = "Msgre. B. Staška 76, Domažlice";
     let baseCoords = L.latLng(49.440478, 12.932068); 
     let currentMode = 'mimo'; 
@@ -874,11 +776,7 @@
     let lastLogTime = 0; 
 
     function calculateRoute() {
-        if (!coordsData.pickup || !coordsData.dropoff) {
-            alert("Vyberte prosím místo nakládky a vykládky.");
-            return;
-        }
-        
+        if (!coordsData.pickup || !coordsData.dropoff) { alert("Vyberte prosím místo nakládky a vykládky."); return; }
         tempMarkers.clearLayers();
         let finalPoints = [];
 
@@ -894,10 +792,7 @@
 
         if (routingControl) map.removeControl(routingControl);
 
-        const carIcon = L.divIcon({
-            html: '<div style="font-size: 26px; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.4));">🚖</div>',
-            className: 'custom-car-marker', iconSize: [32, 32], iconAnchor: [16, 16]
-        });
+        const carIcon = L.divIcon({ html: '<div style="font-size: 26px; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.4));">🚖</div>', className: 'custom-car-marker', iconSize: [32, 32], iconAnchor: [16, 16] });
 
         routingControl = L.Routing.control({
             waypoints: finalPoints,
@@ -926,41 +821,18 @@
             document.getElementById('dist-val').innerText = distanceInKm;
             document.getElementById('price-val').innerText = totalPrice.toLocaleString('cs-CZ');
 
-            // Auto-scroll dolů na mapu na mobilních zařízeních po výpočtu
-            if (window.innerWidth <= 768) {
-                setTimeout(() => {
-                    document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 300);
-            }
+            if (window.innerWidth <= 768) { setTimeout(() => { document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300); }
 
             let now = Date.now();
             if (db && (now - lastLogTime > 3000)) {
                 lastLogTime = now;
-                
                 let saveHistory = (loc) => {
                     db.collection("search_history").add({
-                        date: new Date(),
-                        name: localStorage.getItem('taxi_green_name') || "Neznámý uživatel",
-                        phone: localStorage.getItem('taxi_green_phone') || "Neznámé číslo",
-                        email: localStorage.getItem('taxi_green_email') || "Bez e-mailu",
-                        pickup: document.getElementById('pickup').value || "Bod na mapě",
-                        dropoff: document.getElementById('dropoff').value || "Bod na mapě",
-                        distance: distanceInKm,
-                        price: totalPrice,
-                        mode: currentMode,
-                        userLocation: loc
+                        date: new Date(), name: localStorage.getItem('taxi_green_name') || "Neznámý uživatel", phone: localStorage.getItem('taxi_green_phone') || "Neznámé číslo", email: localStorage.getItem('taxi_green_email') || "Bez e-mailu",
+                        pickup: document.getElementById('pickup').value || "Bod na mapě", dropoff: document.getElementById('dropoff').value || "Bod na mapě", distance: distanceInKm, price: totalPrice, mode: currentMode, userLocation: loc
                     }).catch(err => console.log("Nelze zapsat historii:", err));
                 };
-
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        pos => saveHistory(`GPS: ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`),
-                        err => saveHistory("Nelze zjistit"),
-                        { timeout: 5000, maximumAge: 60000 }
-                    );
-                } else {
-                    saveHistory("Zařízení nepodporuje GPS");
-                }
+                if (navigator.geolocation) { navigator.geolocation.getCurrentPosition(pos => saveHistory(`GPS: ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`), err => saveHistory("Nelze zjistit"), { timeout: 5000, maximumAge: 60000 }); } else { saveHistory("Zařízení nepodporuje GPS"); }
             }
         });
     }
