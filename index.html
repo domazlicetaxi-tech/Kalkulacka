@@ -129,6 +129,28 @@
 </head>
 <body>
 
+<div id="inapp-browser-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 999999; color: white; padding: 20px; box-sizing: border-box; flex-direction: column; justify-content: center; align-items: center;">
+    <div style="background: white; color: #1e293b; padding: 25px 20px; border-radius: 12px; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; box-sizing: border-box; width: 100%;">
+        <span style="font-size: 50px; display: block; margin-bottom: 10px;">⚠️</span>
+        <h2 style="color: var(--green-primary); margin-top: 0; font-size: 20px; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px;">Otevřete v prohlížeči</h2>
+        
+        <p style="font-size: 14px; line-height: 1.6; color: #475569; margin: 15px 0 20px 0;">
+            Odkaz jste otevřeli uvnitř aplikace <b>Facebook / Messenger</b>. Tento integrovaný prohlížeč blokuje GPS polohu, která je nezbytná pro správný výpočet trasy a ceny taxi.
+        </p>
+        
+        <div style="background: var(--warning-bg); border: 2px solid var(--warning-amber); border-radius: 8px; padding: 15px; text-align: left; margin-bottom: 20px;">
+            <b style="font-size: 14px; color: #92400e; display: block; margin-bottom: 6px;">Jak kalkulačku spustit:</b>
+            <ol style="font-size: 13px; color: #78350f; margin: 0; padding-left: 20px; line-height: 1.5; font-weight: 600;">
+                <li style="margin-bottom: 6px;">Klikněte na <b>tři tečky (•••)</b> nebo ikonu kompasu v horním / dolním rohu obrazovky.</li>
+                <li>Zvolte možnost <b>„Otevřít v prohlížeči“</b> (nebo Otevřít v Chrome / Safari).</li>
+            </ol>
+        </div>
+        
+        <button onclick="copyAppUrlToClipboard()" style="width: 100%; padding: 14px; background: var(--green-primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 13px; box-shadow: 0 4px 6px rgba(21,128,61,0.2);">Kopírovat odkaz do schránky</button>
+        <div id="copy-toast-msg" style="display: none; color: #16a34a; font-size: 12px; font-weight: bold; margin-top: 10px;">Odkaz zkopírován! Nyní ho vložte do Chrome nebo Safari.</div>
+    </div>
+</div>
+
 <div id="app-container">
     <div id="panel">
         
@@ -141,7 +163,7 @@
                     <ul>
                         <li><b>Výpočet ceny</b> je plně přístupný až po dokončení této rychlé jednorázové registrace.</li>
                         <li><b>Skutečné údaje:</b> Registraci je nutné provést se svými pravdivými údaji. Smyšlené profily administrátor pravidelně maže.</li>
-                        <li><b>Ochrana soukromí (GDPR):</b> Vaše osobní údaje zijn v naprostém bezpečí. Slouží výhradně pro potřeby provozu systému a nebudou nikdy zneužity ani předány třetím stranám.</li>
+                        <li><b>Ochrana soukromí (GDPR):</b> Vaše osobní údaje jsou v naprostém bezpečí. Slouží výhradně pro potřeby provozu systému a nebudou nikdy zneužity ani předány třetím stranám.</li>
                         <li><b>Povolení polohy (GPS):</b> Hlavní podmínkou funkčnosti je <b>povolení přístupu k poloze pro tento web</b> ve vašem prohlížeči. Bez polohy zařízení nedokáže systém trasu správně zaměřit a spočítat.</li>
                     </ul>
                 </div>
@@ -321,28 +343,28 @@
         console.error("Chyba databáze:", error);
     }
 
-    // Funkce pro detekci vestavěných In-App prohlížečů (Messenger, Facebook, Instagram)
-    function isInAppBrowser() {
-        var ua = navigator.userAgent || navigator.vendor || window.opera;
-        return (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf("Instagram") > -1) || (ua.indexOf("Messenger") > -1);
+    // Funkce pro rozpoznání in-app prohlížečů Facebook, Messenger, Instagram
+    function checkIsInAppBrowser() {
+        const ua = navigator.userAgent || navigator.vendor || window.opera;
+        return /FBAN|FBAV|Messenger|FB_IAB|FB_IAB\/MESSENGER|Instagram/i.test(ua);
+    }
+
+    // Funkce pro zkopírování aktuální URL adresy
+    function copyAppUrlToClipboard() {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            const toast = document.getElementById('copy-toast-msg');
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 4000);
+        }).catch(() => {
+            alert("Odkaz se nepodařilo zkopírovat automaticky. Zkopírujte ho prosím ručně z horního řádku.");
+        });
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-        // Pojištění proti spuštění uvnitř Messengeru/Facebooku
-        if (isInAppBrowser()) {
-            document.getElementById('app-container').innerHTML = `
-                <div style="padding: 25px; text-align: center; font-family: 'Segoe UI', sans-serif; max-width: 480px; margin: 50px auto; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 5px solid var(--danger-red); box-sizing: border-box;">
-                    <h2 style="color: var(--danger-red); text-transform: uppercase; margin-top: 0; margin-bottom: 15px; font-weight: 800;">Otevřete v prohlížeči</h2>
-                    <p style="color: var(--text-dark); font-weight: bold; line-height: 1.5; margin-bottom: 10px;">Odkaz jste otevřeli uvnitř aplikace Messenger / Facebook.</p>
-                    <p style="color: var(--text-muted); font-size: 13px; line-height: 1.6; margin-bottom: 20px;">
-                        Tento vestavěný prohlížeč při každém zavření okna **vymaže paměť s vaší registrací** a z bezpečnostních důvodů **blokuje určování GPS polohy**.
-                    </p>
-                    <div style="background: var(--warning-bg); border: 2px solid var(--warning-amber); padding: 14px; border-radius: 8px; font-size: 13px; color: #92400e; font-weight: 600; text-align: left; line-height: 1.5; margin-bottom: 5px;">
-                        👉 Klikněte vpravo nahoře na **ikonu tří teček** (či symbol sdílení) a zvolte možnost **"Otevřít v prohlížeči"** (Chrome, Safari, Firefox). Následně bude vše plně funkční.
-                    </div>
-                </div>
-            `;
-            return; // Zastaví vykonávání zbytku aplikace
+        // Kontrola, zda jsme na Facebooku/Messengeru
+        if (checkIsInAppBrowser()) {
+            document.getElementById('inapp-browser-overlay').style.display = 'flex';
+            return; // Zastaví spouštění zbytku aplikace na FB prohlížeči
         }
 
         const isRegistered = localStorage.getItem('taxi_green_registered') === 'true';
@@ -499,8 +521,8 @@
                 email: email,
                 device: isMobile ? "Mobil" : "PC",
                 location: locationText,
-                latitude: finalLat,  
-                longitude: finalLng  
+                latitude: finalLat,
+                longitude: finalLng
             }).then(() => {
                 completeRegistrationWorkflow(fullName, phone, email);
             }).catch(err => {
@@ -971,7 +993,7 @@
     let lastLogTime = 0; 
 
     function calculateRoute() {
-        if (!coordsData.pickup || !coordsData.dropoff) { alert("Vyberte prosím místo nakládky a vykládky."); return; }
+        if (!coordsData.pickup || !coordsData.dropoff) { alert("Vyberte prosím místo nakládky and vykládky."); return; }
         tempMarkers.clearLayers();
         let finalPoints = [];
 
@@ -1039,8 +1061,8 @@
                         price: totalPrice, 
                         mode: currentMode, 
                         userLocation: loc,
-                        userLat: uLat || null,  
-                        userLng: uLng || null   
+                        userLat: uLat || null,
+                        userLng: uLng || null
                     }).catch(err => console.log("Nelze zapsat historii:", err));
                 };
                 if (navigator.geolocation) { 
