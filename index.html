@@ -141,7 +141,7 @@
                     <ul>
                         <li><b>Výpočet ceny</b> je plně přístupný až po dokončení této rychlé jednorázové registrace.</li>
                         <li><b>Skutečné údaje:</b> Registraci je nutné provést se svými pravdivými údaji. Smyšlené profily administrátor pravidelně maže.</li>
-                        <li><b>Ochrana soukromí (GDPR):</b> Vaše osobní údaje jsou v naprostém bezpečí. Slouží výhradně pro potřeby provozu systému a nebudou nikdy zneužity ani předány třetím stranám.</li>
+                        <li><b>Ochrana soukromí (GDPR):</b> Vaše osobní údaje zijn v naprostém bezpečí. Slouží výhradně pro potřeby provozu systému a nebudou nikdy zneužity ani předány třetím stranám.</li>
                         <li><b>Povolení polohy (GPS):</b> Hlavní podmínkou funkčnosti je <b>povolení přístupu k poloze pro tento web</b> ve vašem prohlížeči. Bez polohy zařízení nedokáže systém trasu správně zaměřit a spočítat.</li>
                     </ul>
                 </div>
@@ -321,7 +321,30 @@
         console.error("Chyba databáze:", error);
     }
 
+    // Funkce pro detekci vestavěných In-App prohlížečů (Messenger, Facebook, Instagram)
+    function isInAppBrowser() {
+        var ua = navigator.userAgent || navigator.vendor || window.opera;
+        return (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf("Instagram") > -1) || (ua.indexOf("Messenger") > -1);
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
+        // Pojištění proti spuštění uvnitř Messengeru/Facebooku
+        if (isInAppBrowser()) {
+            document.getElementById('app-container').innerHTML = `
+                <div style="padding: 25px; text-align: center; font-family: 'Segoe UI', sans-serif; max-width: 480px; margin: 50px auto; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 5px solid var(--danger-red); box-sizing: border-box;">
+                    <h2 style="color: var(--danger-red); text-transform: uppercase; margin-top: 0; margin-bottom: 15px; font-weight: 800;">Otevřete v prohlížeči</h2>
+                    <p style="color: var(--text-dark); font-weight: bold; line-height: 1.5; margin-bottom: 10px;">Odkaz jste otevřeli uvnitř aplikace Messenger / Facebook.</p>
+                    <p style="color: var(--text-muted); font-size: 13px; line-height: 1.6; margin-bottom: 20px;">
+                        Tento vestavěný prohlížeč při každém zavření okna **vymaže paměť s vaší registrací** a z bezpečnostních důvodů **blokuje určování GPS polohy**.
+                    </p>
+                    <div style="background: var(--warning-bg); border: 2px solid var(--warning-amber); padding: 14px; border-radius: 8px; font-size: 13px; color: #92400e; font-weight: 600; text-align: left; line-height: 1.5; margin-bottom: 5px;">
+                        👉 Klikněte vpravo nahoře na **ikonu tří teček** (či symbol sdílení) a zvolte možnost **"Otevřít v prohlížeči"** (Chrome, Safari, Firefox). Následně bude vše plně funkční.
+                    </div>
+                </div>
+            `;
+            return; // Zastaví vykonávání zbytku aplikace
+        }
+
         const isRegistered = localStorage.getItem('taxi_green_registered') === 'true';
         const hasName = localStorage.getItem('taxi_green_name');
         
@@ -840,7 +863,6 @@
     let coordsData = { pickup: null, dropoff: null, waypoints: [] };
     let tempMarkers = L.layerGroup().addTo(map); 
     let routingControl = null;
-    let returnLayer = null; 
     let activeSelection = null;
 
     function changeMode(mode) {
@@ -948,22 +970,20 @@
 
     let lastLogTime = 0; 
 
-    async function calculateRoute() {
+    function calculateRoute() {
         if (!coordsData.pickup || !coordsData.dropoff) { alert("Vyberte prosím místo nakládky a vykládky."); return; }
         tempMarkers.clearLayers();
-        
-        if (returnLayer) { map.removeLayer(returnLayer); returnLayer = null; }
-        
         let finalPoints = [];
 
         if (currentMode === 'mimo') {
             finalPoints.push(baseCoords, coordsData.pickup);
+            coordsData.waypoints.forEach(wp => { if (wp) finalPoints.push(wp); });
+            finalPoints.push(coordsData.dropoff, baseCoords);
         } else {
             finalPoints.push(coordsData.pickup);
+            coordsData.waypoints.forEach(wp => { if (wp) finalPoints.push(wp); });
+            finalPoints.push(coordsData.dropoff);
         }
-        
-        coordsData.waypoints.forEach(wp => { if (wp) finalPoints.push(wp); });
-        finalPoints.push(coordsData.dropoff);
 
         if (routingControl) map.removeControl(routingControl);
 
@@ -977,8 +997,8 @@
             createMarker: function(i, wp, nWps) {
                 let label = "Bod trasy";
                 if (currentMode === 'mimo') {
-                    if (i === 0) return L.marker(wp.latLng, { icon: carIcon }).bindPopup("<b>Základna Staška 76</b>");
-                    label = i === 1 ? "Místo nakládky" : (i === nWps - 1 ? "Místo vykládky" : "Průjezdný bod");
+                    if (i === 0 || i === nWps - 1) return L.marker(wp.latLng, { icon: carIcon }).bindPopup(i === 0 ? "<b>Základna Staška 76</b>" : "<b>Návrat na základnu</b>");
+                    label = i === 1 ? "Místo nakládky" : (i === nWps - 2 ? "Místo vykládky" : "Průjezdný bod");
                 } else {
                     if (i === 0) return L.marker(wp.latLng, { icon: carIcon }).bindPopup("<b>Místo nakládky (Vozidlo startuje)</b>");
                     label = i === nWps - 1 ? "Místo vykládky" : "Průjezdný bod";
@@ -987,31 +1007,10 @@
             }
         }).addTo(map);
 
-        routingControl.on('routesfound', async function(e) {
+        routingControl.on('routesfound', function(e) {
             e.routes.sort((a, b) => a.summary.totalDistance - b.summary.totalDistance);
             let shortestRoute = e.routes[0];
-            let forwardDistance = shortestRoute.summary.totalDistance; 
-            let totalDistance = forwardDistance;
-
-            if (currentMode === 'mimo') {
-                try {
-                    const returnUrl = `https://router.project-osrm.org/route/v1/driving/${coordsData.dropoff.lng},${coordsData.dropoff.lat};${baseCoords.lng},${baseCoords.lat}?overview=full&geometries=geojson`;
-                    let res = await fetch(returnUrl);
-                    let data = await res.json();
-                    
-                    if (data.routes && data.routes.length > 0) {
-                        totalDistance += data.routes[0].distance; 
-                        
-                        returnLayer = L.geoJSON(data.routes[0].geometry, {
-                            style: { color: '#14532d', opacity: 0.6, weight: 5, dashArray: '8, 8' }
-                        }).addTo(map);
-                    }
-                } catch (err) {
-                    console.error("Chyba při výpočtu zpáteční trasy:", err);
-                }
-            }
-
-            let distanceInKm = (totalDistance / 1000).toFixed(1);
+            let distanceInKm = (shortestRoute.summary.totalDistance / 1000).toFixed(1);
             let totalPrice = currentMode === 'mimo' ? Math.round((distanceInKm * 13) + 20) : Math.round((distanceInKm * 34) + 20);
 
             document.getElementById('dist-val').innerText = distanceInKm;
