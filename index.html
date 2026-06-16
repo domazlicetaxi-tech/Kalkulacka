@@ -141,7 +141,7 @@
                     <ul>
                         <li><b>Výpočet ceny</b> je plně přístupný až po dokončení této rychlé jednorázové registrace.</li>
                         <li><b>Skutečné údaje:</b> Registraci je nutné provést se svými pravdivými údaji. Smyšlené profily administrátor pravidelně maže.</li>
-                        <li><b>Ochrana soukromí (GDPR):</b> Vaše osobní údaje jsou v naprostém bezpečí. Slouží výhradně pro potřeby provozu systému a nebudou nikdy zneužity ani předány třetím stranám.</li>
+                        <li><b>Ochrana soukromí (GDPR):</b> Vaše osobní údaje zijn v naprostém bezpečí. Slouží výhradně pro potřeby provozu systému a nebudou nikdy zneužity ani předány třetím stranám.</li>
                         <li><b>Povolení polohy (GPS):</b> Hlavní podmínkou funkčnosti je <b>povolení přístupu k poloze pro tento web</b> ve vašem prohlížeči. Bez polohy zařízení nedokáže systém trasu správně zaměřit a spočítat.</li>
                     </ul>
                 </div>
@@ -321,7 +321,30 @@
         console.error("Chyba databáze:", error);
     }
 
+    // Funkce pro detekci vestavěných In-App prohlížečů (Messenger, Facebook, Instagram)
+    function isInAppBrowser() {
+        var ua = navigator.userAgent || navigator.vendor || window.opera;
+        return (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf("Instagram") > -1) || (ua.indexOf("Messenger") > -1);
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
+        // Pojištění proti spuštění uvnitř Messengeru/Facebooku
+        if (isInAppBrowser()) {
+            document.getElementById('app-container').innerHTML = `
+                <div style="padding: 25px; text-align: center; font-family: 'Segoe UI', sans-serif; max-width: 480px; margin: 50px auto; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 5px solid var(--danger-red); box-sizing: border-box;">
+                    <h2 style="color: var(--danger-red); text-transform: uppercase; margin-top: 0; margin-bottom: 15px; font-weight: 800;">Otevřete v prohlížeči</h2>
+                    <p style="color: var(--text-dark); font-weight: bold; line-height: 1.5; margin-bottom: 10px;">Odkaz jste otevřeli uvnitř aplikace Messenger / Facebook.</p>
+                    <p style="color: var(--text-muted); font-size: 13px; line-height: 1.6; margin-bottom: 20px;">
+                        Tento vestavěný prohlížeč při každém zavření okna **vymaže paměť s vaší registrací** a z bezpečnostních důvodů **blokuje určování GPS polohy**.
+                    </p>
+                    <div style="background: var(--warning-bg); border: 2px solid var(--warning-amber); padding: 14px; border-radius: 8px; font-size: 13px; color: #92400e; font-weight: 600; text-align: left; line-height: 1.5; margin-bottom: 5px;">
+                        👉 Klikněte vpravo nahoře na **ikonu tří teček** (či symbol sdílení) a zvolte možnost **"Otevřít v prohlížeči"** (Chrome, Safari, Firefox). Následně bude vše plně funkční.
+                    </div>
+                </div>
+            `;
+            return; // Zastaví vykonávání zbytku aplikace
+        }
+
         const isRegistered = localStorage.getItem('taxi_green_registered') === 'true';
         const hasName = localStorage.getItem('taxi_green_name');
         
@@ -476,8 +499,8 @@
                 email: email,
                 device: isMobile ? "Mobil" : "PC",
                 location: locationText,
-                latitude: finalLat,  // NEPRŮSTŘELNÁ POJISTKA: Ukládáme samostatné číslo lat
-                longitude: finalLng  // NEPRŮSTŘELNÁ POJISTKA: Ukládáme samostatné číslo lng
+                latitude: finalLat,  
+                longitude: finalLng  
             }).then(() => {
                 completeRegistrationWorkflow(fullName, phone, email);
             }).catch(err => {
@@ -556,7 +579,6 @@
         setTimeout(() => { map.invalidateSize(); }, 200);
     }
 
-    // VYDRŽÍ VŠE: Tlačítko teď do funkce posílá jak text, tak přímé číselné GPS koordináty z DB
     function renderLocationLink(locStr, lat, lng) {
         if (!locStr || locStr === "Nelze zjistit" || locStr === "Zařízení nepodporuje GPS") return '<span style="color:gray; font-size:12px;">Neznámá</span>';
         let safeLocStr = locStr.replace(/'/g, "\\'");
@@ -565,22 +587,18 @@
         return `<button onclick="showLocationOnInternalMap(${latVal}, ${lngVal}, '${safeLocStr}')" class="btn-map-pick" style="padding: 4px 8px; background: white;" title="${locStr}">📍</button>`;
     }
 
-    // ABSOLUTNÍ PŘESNOST: Pokud existují přímé souřadnice lat/lng, vykreslí je ihned a ignoruje duplicitu adres!
     window.showLocationOnInternalMap = async function(lat, lng, fallbackText) {
         closeAdmin();
         let latlng = null;
         
-        // 1. Nejvyšší priorita: Pokud máme v DB uložené čisté číselné souřadnice, použijeme je
         if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
             latlng = L.latLng(lat, lng);
         } else if (fallbackText) {
-            // 2. Druhá priorita (pro starší záznamy): Pokusíme se vytáhnout GPS schovanou v závorce textu
             let gpsRegex = /(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/;
             let match = fallbackText.match(gpsRegex);
             if (match) {
                 latlng = L.latLng(parseFloat(match[1]), parseFloat(match[2]));
             } else {
-                // 3. Poslední nouzová možnost: Fulltextové vyhledávání textu přes Nominatim
                 try {
                     let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fallbackText)}&countrycodes=cz`);
                     let data = await res.json();
@@ -1021,8 +1039,8 @@
                         price: totalPrice, 
                         mode: currentMode, 
                         userLocation: loc,
-                        userLat: uLat || null,  // Ukládáme přesný lat pro historii trasy
-                        userLng: uLng || null   // Ukládáme přesný lng pro historii trasy
+                        userLat: uLat || null,  
+                        userLng: uLng || null   
                     }).catch(err => console.log("Nelze zapsat historii:", err));
                 };
                 if (navigator.geolocation) { 
