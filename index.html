@@ -216,6 +216,9 @@
 
         <div class="action-section">
             <button class="btn-calc" onclick="handleCalculateRequest()">Vypočítat trasu</button>
+            
+            <button id="btn-navigate" onclick="startNavigation()" style="display: none; width: 100%; padding: 14px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 16px; text-transform: uppercase; margin-top: 10px; box-shadow: 0 4px 6px rgba(37,99,235,0.2);">Spustit navigaci (Google Mapy)</button>
+            
             <div id="results-box">
                 <div>
                     <p class="res-text">Vzdálenost: <span id="dist-val" style="font-size: 16px;">0</span> km</p>
@@ -345,6 +348,10 @@
     }
 
     async function handleCalculateRequest() {
+        // Skryje navigační tlačítko, dokud se nespočítá nová trasa
+        const navBtn = document.getElementById('btn-navigate');
+        if (navBtn) navBtn.style.display = 'none';
+
         const isRegistered = localStorage.getItem('taxi_green_registered') === 'true';
         const hasName = localStorage.getItem('taxi_green_name');
         const phone = localStorage.getItem('taxi_green_phone');
@@ -476,8 +483,8 @@
                 email: email,
                 device: isMobile ? "Mobil" : "PC",
                 location: locationText,
-                latitude: finalLat,  // NEPRŮSTŘELNÁ POJISTKA: Ukládáme samostatné číslo lat
-                longitude: finalLng  // NEPRŮSTŘELNÁ POJISTKA: Ukládáme samostatné číslo lng
+                latitude: finalLat,
+                longitude: finalLng
             }).then(() => {
                 completeRegistrationWorkflow(fullName, phone, email);
             }).catch(err => {
@@ -556,7 +563,6 @@
         setTimeout(() => { map.invalidateSize(); }, 200);
     }
 
-    // VYDRŽÍ VŠE: Tlačítko teď do funkce posílá jak text, tak přímé číselné GPS koordináty z DB
     function renderLocationLink(locStr, lat, lng) {
         if (!locStr || locStr === "Nelze zjistit" || locStr === "Zařízení nepodporuje GPS") return '<span style="color:gray; font-size:12px;">Neznámá</span>';
         let safeLocStr = locStr.replace(/'/g, "\\'");
@@ -565,22 +571,18 @@
         return `<button onclick="showLocationOnInternalMap(${latVal}, ${lngVal}, '${safeLocStr}')" class="btn-map-pick" style="padding: 4px 8px; background: white;" title="${locStr}">📍</button>`;
     }
 
-    // ABSOLUTNÍ PŘESNOST: Pokud existují přímé souřadnice lat/lng, vykreslí je ihned a ignoruje duplicitu adres!
     window.showLocationOnInternalMap = async function(lat, lng, fallbackText) {
         closeAdmin();
         let latlng = null;
         
-        // 1. Nejvyšší priorita: Pokud máme v DB uložené čisté číselné souřadnice, použijeme je
         if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
             latlng = L.latLng(lat, lng);
         } else if (fallbackText) {
-            // 2. Druhá priorita (pro starší záznamy): Pokusíme se vytáhnout GPS schovanou v závorce textu
             let gpsRegex = /(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/;
             let match = fallbackText.match(gpsRegex);
             if (match) {
                 latlng = L.latLng(parseFloat(match[1]), parseFloat(match[2]));
             } else {
-                // 3. Poslední nouzová možnost: Fulltextové vyhledávání textu přes Nominatim
                 try {
                     let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fallbackText)}&countrycodes=cz`);
                     let data = await res.json();
@@ -952,7 +954,6 @@
 
     let lastLogTime = 0; 
 
-    // PŘIDÁNO ZDE: Náš nový Custom Router
     const SplitRouter = L.Class.extend({
         route: async function(waypoints, callback, context, options) {
             try {
@@ -1009,22 +1010,10 @@
 
         const carIcon = L.divIcon({ html: '<div style="font-size: 26px; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.4));">🚖</div>', className: 'custom-car-marker', iconSize: [32, 32], iconAnchor: [16, 16] });
 
-        // UPRAVENO ZDE: Použití našeho nového SplitRouteru místo OSRM
-        // UPRAVENO ZDE: Použití našeho nového SplitRouteru místo OSRM
         routingControl = L.Routing.control({
             waypoints: finalPoints,
             router: new SplitRouter(),
-            // PŘIDÁNO: Vynucené vykreslení čáry z nasbíraných bodů
-            routeLine: function(route, options) {
-                return L.polyline(route.coordinates, { 
-                    color: '#00cc44', 
-                    opacity: 0.9, 
-                    weight: 8, 
-                    lineCap: 'round', 
-                    lineJoin: 'round' 
-                });
-            },
-            addWaypoints: false, // DŮLEŽITÉ: Zabrání chybám, kdyby uživatel klikl na čáru ve snaze ji přesunout
+            lineOptions: { styles: [{ color: '#00cc44', opacity: 0.9, weight: 8 }] }, 
             fitSelectedRoutes: true, show: false,
             createMarker: function(i, wp, nWps) {
                 let label = "Bod trasy";
@@ -1047,6 +1036,10 @@
 
             document.getElementById('dist-val').innerText = distanceInKm;
             document.getElementById('price-val').innerText = totalPrice.toLocaleString('cs-CZ');
+
+            // Zobrazí navigační tlačítko pro řidiče
+            const navBtn = document.getElementById('btn-navigate');
+            if (navBtn) navBtn.style.display = 'block';
 
             if (window.innerWidth <= 768) { setTimeout(() => { document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300); }
 
@@ -1071,8 +1064,8 @@
                         price: totalPrice, 
                         mode: currentMode, 
                         userLocation: loc,
-                        userLat: uLat || null,  // Ukládáme přesný lat pro historii trasy
-                        userLng: uLng || null   // Ukládáme přesný lng pro historii trasy
+                        userLat: uLat || null,
+                        userLng: uLng || null
                     }).catch(err => console.log("Nelze zapsat historii:", err));
                 };
                 if (navigator.geolocation) { 
@@ -1087,6 +1080,32 @@
             }
         });
     }
+
+    // Funkce pro otevření Google Map v režimu navigace
+    function startNavigation() {
+        if (!coordsData.pickup || !coordsData.dropoff) return;
+
+        // Cíl (konečná vykládka)
+        let destination = `${coordsData.dropoff.lat},${coordsData.dropoff.lng}`;
+        
+        // Seznam průjezdných bodů (waypoints):
+        // Jako první bod přidáme místo nakládky (pickup)
+        let waypointsArr = [`${coordsData.pickup.lat},${coordsData.pickup.lng}`];
+        
+        // Přidáme všechny případné průjezdné body zadané v kalkulačce
+        coordsData.waypoints.forEach(wp => {
+            if (wp) waypointsArr.push(`${wp.lat},${wp.lng}`);
+        });
+
+        // Sloučíme body pomocí oddělovače '|' a zakódujeme pro URL
+        let waypointsStr = encodeURIComponent(waypointsArr.join('|'));
+        
+        // OPRAVENÁ ADRESA - Oficiální Google Maps Directions API:
+        let url = `https://www.google.com/maps/dir/?api=1&destination=${destination}&waypoints=${waypointsStr}&travelmode=driving&dir_action=navigate`;
+        
+        window.open(url, '_blank');
+    }
+
     window.addEventListener('resize', () => { map.invalidateSize(); });
 </script>
 </body>
