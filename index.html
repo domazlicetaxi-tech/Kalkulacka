@@ -129,28 +129,6 @@
 </head>
 <body>
 
-<div id="inapp-browser-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 999999; color: white; padding: 20px; box-sizing: border-box; flex-direction: column; justify-content: center; align-items: center;">
-    <div style="background: white; color: #1e293b; padding: 25px 20px; border-radius: 12px; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; box-sizing: border-box; width: 100%;">
-        <span style="font-size: 50px; display: block; margin-bottom: 10px;">⚠️</span>
-        <h2 style="color: var(--green-primary); margin-top: 0; font-size: 20px; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px;">Otevřete v prohlížeči</h2>
-        
-        <p style="font-size: 14px; line-height: 1.6; color: #475569; margin: 15px 0 20px 0;">
-            Odkaz jste otevřeli uvnitř aplikace <b>Facebook / Messenger</b>. Tento integrovaný prohlížeč blokuje GPS polohu, která je nezbytná pro správný výpočet trasy a ceny taxi.
-        </p>
-        
-        <div style="background: var(--warning-bg); border: 2px solid var(--warning-amber); border-radius: 8px; padding: 15px; text-align: left; margin-bottom: 20px;">
-            <b style="font-size: 14px; color: #92400e; display: block; margin-bottom: 6px;">Jak kalkulačku spustit:</b>
-            <ol style="font-size: 13px; color: #78350f; margin: 0; padding-left: 20px; line-height: 1.5; font-weight: 600;">
-                <li style="margin-bottom: 6px;">Klikněte na <b>tři tečky (•••)</b> nebo ikonu kompasu v horním / dolním rohu obrazovky.</li>
-                <li>Zvolte možnost <b>„Otevřít v prohlížeči“</b> (nebo Otevřít v Chrome / Safari).</li>
-            </ol>
-        </div>
-        
-        <button onclick="copyAppUrlToClipboard()" style="width: 100%; padding: 14px; background: var(--green-primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 13px; box-shadow: 0 4px 6px rgba(21,128,61,0.2);">Kopírovat odkaz do schránky</button>
-        <div id="copy-toast-msg" style="display: none; color: #16a34a; font-size: 12px; font-weight: bold; margin-top: 10px;">Odkaz zkopírován! Nyní ho vložte do Chrome nebo Safari.</div>
-    </div>
-</div>
-
 <div id="app-container">
     <div id="panel">
         
@@ -343,30 +321,7 @@
         console.error("Chyba databáze:", error);
     }
 
-    // Funkce pro rozpoznání in-app prohlížečů Facebook, Messenger, Instagram
-    function checkIsInAppBrowser() {
-        const ua = navigator.userAgent || navigator.vendor || window.opera;
-        return /FBAN|FBAV|Messenger|FB_IAB|FB_IAB\/MESSENGER|Instagram/i.test(ua);
-    }
-
-    // Funkce pro zkopírování aktuální URL adresy
-    function copyAppUrlToClipboard() {
-        navigator.clipboard.writeText(window.location.href).then(() => {
-            const toast = document.getElementById('copy-toast-msg');
-            toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; }, 4000);
-        }).catch(() => {
-            alert("Odkaz se nepodařilo zkopírovat automaticky. Zkopírujte ho prosím ručně z horního řádku.");
-        });
-    }
-
     window.addEventListener('DOMContentLoaded', () => {
-        // Kontrola, zda jsme na Facebooku/Messengeru
-        if (checkIsInAppBrowser()) {
-            document.getElementById('inapp-browser-overlay').style.display = 'flex';
-            return; // Zastaví spouštění zbytku aplikace na FB prohlížeči
-        }
-
         const isRegistered = localStorage.getItem('taxi_green_registered') === 'true';
         const hasName = localStorage.getItem('taxi_green_name');
         
@@ -521,8 +476,8 @@
                 email: email,
                 device: isMobile ? "Mobil" : "PC",
                 location: locationText,
-                latitude: finalLat,
-                longitude: finalLng
+                latitude: finalLat,  // NEPRŮSTŘELNÁ POJISTKA: Ukládáme samostatné číslo lat
+                longitude: finalLng  // NEPRŮSTŘELNÁ POJISTKA: Ukládáme samostatné číslo lng
             }).then(() => {
                 completeRegistrationWorkflow(fullName, phone, email);
             }).catch(err => {
@@ -601,6 +556,7 @@
         setTimeout(() => { map.invalidateSize(); }, 200);
     }
 
+    // VYDRŽÍ VŠE: Tlačítko teď do funkce posílá jak text, tak přímé číselné GPS koordináty z DB
     function renderLocationLink(locStr, lat, lng) {
         if (!locStr || locStr === "Nelze zjistit" || locStr === "Zařízení nepodporuje GPS") return '<span style="color:gray; font-size:12px;">Neznámá</span>';
         let safeLocStr = locStr.replace(/'/g, "\\'");
@@ -609,18 +565,22 @@
         return `<button onclick="showLocationOnInternalMap(${latVal}, ${lngVal}, '${safeLocStr}')" class="btn-map-pick" style="padding: 4px 8px; background: white;" title="${locStr}">📍</button>`;
     }
 
+    // ABSOLUTNÍ PŘESNOST: Pokud existují přímé souřadnice lat/lng, vykreslí je ihned a ignoruje duplicitu adres!
     window.showLocationOnInternalMap = async function(lat, lng, fallbackText) {
         closeAdmin();
         let latlng = null;
         
+        // 1. Nejvyšší priorita: Pokud máme v DB uložené čisté číselné souřadnice, použijeme je
         if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
             latlng = L.latLng(lat, lng);
         } else if (fallbackText) {
+            // 2. Druhá priorita (pro starší záznamy): Pokusíme se vytáhnout GPS schovanou v závorce textu
             let gpsRegex = /(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/;
             let match = fallbackText.match(gpsRegex);
             if (match) {
                 latlng = L.latLng(parseFloat(match[1]), parseFloat(match[2]));
             } else {
+                // 3. Poslední nouzová možnost: Fulltextové vyhledávání textu přes Nominatim
                 try {
                     let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fallbackText)}&countrycodes=cz`);
                     let data = await res.json();
@@ -992,8 +952,46 @@
 
     let lastLogTime = 0; 
 
+    // PŘIDÁNO ZDE: Náš nový Custom Router
+    const SplitRouter = L.Class.extend({
+        route: async function(waypoints, callback, context, options) {
+            try {
+                let totalDistance = 0;
+                let coordinates = [];
+                let validWaypoints = waypoints.filter(w => w && w.latLng);
+                
+                for (let i = 0; i < validWaypoints.length - 1; i++) {
+                    let w1 = validWaypoints[i].latLng;
+                    let w2 = validWaypoints[i+1].latLng;
+                    
+                    let url = `https://router.project-osrm.org/route/v1/driving/${w1.lng},${w1.lat};${w2.lng},${w2.lat}?overview=full&geometries=geojson`;
+                    let res = await fetch(url);
+                    let data = await res.json();
+                    
+                    if (data.routes && data.routes.length > 0) {
+                        let r = data.routes[0];
+                        totalDistance += r.distance;
+                        let legCoords = r.geometry.coordinates.map(c => L.latLng(c[1], c[0]));
+                        coordinates = coordinates.concat(legCoords);
+                    }
+                }
+                
+                callback.call(context, null, [{
+                    name: 'Trasa',
+                    summary: { totalDistance: totalDistance, totalTime: 0 },
+                    coordinates: coordinates,
+                    instructions: [],
+                    waypoints: validWaypoints
+                }]);
+            } catch (err) {
+                console.error("Chyba při výpočtu rozdělené trasy:", err);
+                callback.call(context, err, null);
+            }
+        }
+    });
+
     function calculateRoute() {
-        if (!coordsData.pickup || !coordsData.dropoff) { alert("Vyberte prosím místo nakládky and vykládky."); return; }
+        if (!coordsData.pickup || !coordsData.dropoff) { alert("Vyberte prosím místo nakládky a vykládky."); return; }
         tempMarkers.clearLayers();
         let finalPoints = [];
 
@@ -1011,9 +1009,10 @@
 
         const carIcon = L.divIcon({ html: '<div style="font-size: 26px; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.4));">🚖</div>', className: 'custom-car-marker', iconSize: [32, 32], iconAnchor: [16, 16] });
 
+        // UPRAVENO ZDE: Použití našeho nového SplitRouteru místo OSRM
         routingControl = L.Routing.control({
             waypoints: finalPoints,
-            router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1', routingOptions: { continue_straight: false, alternatives: true } }),
+            router: new SplitRouter(),
             lineOptions: { styles: [{ color: '#00cc44', opacity: 0.9, weight: 8 }] }, 
             fitSelectedRoutes: true, show: false,
             createMarker: function(i, wp, nWps) {
@@ -1061,8 +1060,8 @@
                         price: totalPrice, 
                         mode: currentMode, 
                         userLocation: loc,
-                        userLat: uLat || null,
-                        userLng: uLng || null
+                        userLat: uLat || null,  // Ukládáme přesný lat pro historii trasy
+                        userLng: uLng || null   // Ukládáme přesný lng pro historii trasy
                     }).catch(err => console.log("Nelze zapsat historii:", err));
                 };
                 if (navigator.geolocation) { 
