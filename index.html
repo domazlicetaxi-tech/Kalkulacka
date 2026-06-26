@@ -35,10 +35,6 @@
         .header { background: var(--green-primary); padding: 15px 20px; color: white; text-align: center; flex-shrink: 0; position: relative; }
         .header h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; cursor: pointer; }
         
-        /* Tlačítko pro přihlášení řidiče v záhlaví */
-        .btn-driver-login-trigger { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; }
-        .btn-driver-login-trigger:hover { background: rgba(255,255,255,0.3); }
-
         .mode-toggle { display: flex; background: rgba(0,0,0,0.15); padding: 4px; border-radius: 8px; margin-bottom: 12px; gap: 4px; }
         .btn-mode { flex: 1; background: none; border: none; color: rgba(255,255,255,0.75); padding: 10px 5px; font-weight: 700; font-size: 13px; border-radius: 6px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
         .btn-mode.active { background: white; color: var(--green-primary); box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
@@ -92,7 +88,6 @@
         .btn-reg-submit:hover { background: var(--green-dark); }
         .btn-reg-submit:disabled { background: #94a3b8; cursor: not-allowed; }
 
-        /* SEKCE ADMINISTRACE */
         #admin-view { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: white; z-index: 99999; padding: 20px; box-sizing: border-box; overflow-y: auto; }
         .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--green-primary); padding-bottom: 10px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .stat-card { background: var(--green-bg); padding: 20px; border-radius: 8px; border-left: 5px solid var(--green-primary); margin-bottom: 20px; font-size: 18px; font-weight: bold; color: var(--green-dark); }
@@ -110,14 +105,6 @@
         a.admin-link:hover { text-decoration: underline; }
         .btn-delete { background: white; border: 1px solid #cbd5e1; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 16px; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
         .btn-delete:hover { background: #f1f5f9; border-color: var(--danger-red); }
-
-        /* SEKCE ŘIDIČE - NOVÁ STYLIZACE */
-        #driver-view { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #f0f9ff; z-index: 99998; padding: 20px; box-sizing: border-box; overflow-y: auto; }
-        .driver-card { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 15px; border-left: 6px solid #0284c7; }
-        .btn-navigate-pickup { display: block; width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; text-align: center; text-decoration: none; cursor: pointer; text-transform: uppercase; margin-top: 10px; box-shadow: 0 3px 6px rgba(2,132,199,0.3); }
-        .btn-navigate-pickup:hover { background: #0369a1; }
-        .order-popup-alert { position: fixed; top: 20px; left: 20px; right: 20px; background: #fffbeb; border: 3px solid #f59e0b; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); padding: 20px; z-index: 100000; animation: bounceIn 0.5s; display: none; }
-        @keyframes bounceIn { 0% { transform: scale(0.7); opacity: 0; } 70% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
 
         @media (max-width: 768px) {
             html, body { height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
@@ -189,7 +176,6 @@
 
         <div class="header">
             <h1 onclick="handleAdminClick()">Taxi Green</h1>
-            <button class="btn-driver-login-trigger" onclick="triggerDriverLogin()">🔑 Pro řidiče</button>
             
             <div class="mode-toggle">
                 <button id="mode-mimo" class="btn-mode active" onclick="changeMode('mimo')">Jízda mimo město</button>
@@ -229,12 +215,7 @@
         </div>
 
         <div class="action-section">
-            <button class="btn-calc" onclick="handleCalculateRequest()">Vypočítat cenu</button>
-            
-            <button id="btn-navigate" onclick="startNavigation()" style="display: none; width: 100%; padding: 14px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 16px; text-transform: uppercase; margin-top: 10px; box-shadow: 0 4px 6px rgba(37,99,235,0.2);">Spustit navigaci (Google Mapy)</button>
-            
-            <button id="btn-order-taxi" onclick="orderTaxi()" style="display: none; width: 100%; padding: 14px; background: #22c55e; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 16px; text-transform: uppercase; margin-top: 10px; box-shadow: 0 4px 6px rgba(34,197,94,0.2);">Přivolat taxi</button>
-            
+            <button class="btn-calc" onclick="handleCalculateRequest()">Vypočítat trasu</button>
             <div id="results-box">
                 <div>
                     <p class="res-text">Vzdálenost: <span id="dist-val" style="font-size: 16px;">0</span> km</p>
@@ -247,28 +228,6 @@
     </div>
     <div id="map"></div>
 </div>
-
-<div id="driver-view">
-    <div class="admin-header">
-        <h2>🚖 Řidičský Radar - Taxi Green</h2>
-        <button class="btn-back" onclick="closeDriverView()" style="background:#0284c7;">Odhlásit se / Zpět</button>
-    </div>
-    
-    <h3 style="color:#0369a1; margin-bottom:15px; border-bottom:2px solid #bae6fd; padding-bottom:5px;">Aktivní zakázky čekající na vyřízení:</h3>
-    <div id="driver-orders-container">
-        <p style="color:gray; font-style:italic; text-align:center; padding:3px 0;">Žádné aktivní objednávky v systému nejsou.</p>
-    </div>
-</div>
-
-<div id="order-alert-popup" class="order-popup-alert">
-    <h2 style="margin-top:0; color:#b45309; display:flex; align-items:center; gap:8px;">🔔 NOVÁ OBJEDNÁVKA TAXI!</h2>
-    <div id="popup-order-details" style="font-size:15px; line-height:1.5; color:#78350f; margin-bottom:15px;"></div>
-    <div style="display:flex; gap:10px;">
-        <button id="btn-popup-nav" class="btn-navigate-pickup" style="margin-top:0; flex:2;">🗺️ Spustit navigaci k zákazníkovi</button>
-        <button onclick="acceptActiveOrder()" style="background:#22c55e; color:white; font-weight:bold; border:none; border-radius:8px; padding:10px 15px; cursor:pointer; text-transform:uppercase; flex:1;">Přijmout</button>
-    </div>
-</div>
-
 
 <div id="admin-view">
     <div class="admin-header">
@@ -309,42 +268,6 @@
                 <tr><td colspan="7" style="text-align:center; color:gray;">Načítám historii kalkulací...</td></tr>
             </tbody>
         </table>
-    </div>
-
-    <div class="admin-section-drivers" style="background: #f0f9ff; padding: 20px; border-radius: 8px; border: 2px solid #bae6fd; margin-top: 30px; margin-bottom: 30px;">
-        <h3 style="margin-top: 0; color: #0369a1; border-bottom: 2px solid #bae6fd; padding-bottom: 5px; font-size: 18px;">🔵 Evidence interních řidičů</h3>
-        
-        <div style="display: flex; gap: 12px; margin-bottom: 15px; flex-wrap: wrap; align-items: flex-end;">
-            <div style="flex: 1; min-width: 150px;">
-                <label style="color: #0369a1; font-size: 11px;">Jméno a příjmení</label>
-                <input type="text" id="drv-name" placeholder="Např. Petr Novotný" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; width: 100%; box-sizing: border-box;">
-            </div>
-            <div style="flex: 1; min-width: 150px;">
-                <label style="color: #0369a1; font-size: 11px;">Telefonní číslo</label>
-                <input type="tel" id="drv-phone" placeholder="+420 777 111 222" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; width: 100%; box-sizing: border-box;">
-            </div>
-            <div style="flex: 1; min-width: 150px;">
-                <label style="color: #0369a1; font-size: 11px;">E-mail řidiče</label>
-                <input type="email" id="drv-email" placeholder="ridic@taxi.cz" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; width: 100%; box-sizing: border-box;">
-            </div>
-            <button onclick="addDriver()" style="background: #0284c7; color: white; border: none; padding: 9px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; text-transform: uppercase;">+ Přidat řidiče</button>
-        </div>
-
-        <div class="admin-table-container" style="margin-bottom: 0;">
-            <table>
-                <thead>
-                    <tr style="background: #e0f2fe;">
-                        <th style="color: #0369a1;">Jméno řidiče</th>
-                        <th style="color: #0369a1;">Telefon</th>
-                        <th style="color: #0369a1;">E-mail</th>
-                        <th style="width: 60px; text-align: center; color: #0369a1;">Akce</th>
-                    </tr>
-                </thead>
-                <tbody id="drivers-table-body">
-                    <tr><td colspan="4" style="text-align:center; color:gray;">Načítám seznam interních řidičů...</td></tr>
-                </tbody>
-            </table>
-        </div>
     </div>
 
     <h3 class="admin-section-title">
@@ -390,8 +313,6 @@
     
     let db = null;
     let isAdminViewingRoute = false;
-    let liveOrdersListener = null; // Hlídání objednávek v reálném čase
-    let lastActiveOrderId = null; // Pro zabránění opakovanému pípání u stejné zakázky
 
     try {
         firebase.initializeApp(firebaseConfig);
@@ -424,11 +345,6 @@
     }
 
     async function handleCalculateRequest() {
-        const navBtn = document.getElementById('btn-navigate');
-        if (navBtn) navBtn.style.display = 'none';
-        const orderBtn = document.getElementById('btn-order-taxi');
-        if (orderBtn) orderBtn.style.display = 'none';
-
         const isRegistered = localStorage.getItem('taxi_green_registered') === 'true';
         const hasName = localStorage.getItem('taxi_green_name');
         const phone = localStorage.getItem('taxi_green_phone');
@@ -560,8 +476,8 @@
                 email: email,
                 device: isMobile ? "Mobil" : "PC",
                 location: locationText,
-                latitude: finalLat,
-                longitude: finalLng
+                latitude: finalLat,  // NEPRŮSTŘELNÁ POJISTKA: Ukládáme samostatné číslo lat
+                longitude: finalLng  // NEPRŮSTŘELNÁ POJISTKA: Ukládáme samostatné číslo lng
             }).then(() => {
                 completeRegistrationWorkflow(fullName, phone, email);
             }).catch(err => {
@@ -615,7 +531,6 @@
     let titleClickTimeout;
     let allUsersData = [];
     let allHistoryData = [];
-    let allDriversData = [];
 
     function handleAdminClick() {
         titleClickCount++;
@@ -641,181 +556,7 @@
         setTimeout(() => { map.invalidateSize(); }, 200);
     }
 
-    /* ==================== LOGIKA PRO ŘIDIČSKOU SEKCI ==================== */
-    async function triggerDriverLogin() {
-        const phone = prompt("Zadejte své telefonní číslo řidiče pro přihlášení do radaru:\n(Např. +420 777 111 222)");
-        if (!phone) return;
-
-        if (!db) {
-            alert("Databáze není dostupná.");
-            return;
-        }
-
-        try {
-            // Kontrola proti evidenci interních řidičů
-            const snapshot = await db.collection("drivers").where("phone", "==", phone.trim()).limit(1).get();
-            if (snapshot.empty) {
-                alert("Přístup odepřen! Toto telefonní číslo není v Evidenci interních řidičů.");
-                return;
-            }
-
-            // Úspěšné přihlášení
-            openDriverView();
-        } catch(err) {
-            console.error(err);
-            alert("Chyba při ověřování řidiče.");
-        }
-    }
-
-    function openDriverView() {
-        document.getElementById("app-container").style.display = "none";
-        document.getElementById("driver-view").style.display = "block";
-        
-        // Spustit ŽIVÝ RADAR (Real-time poslech objednávek)
-        if (db) {
-            liveOrdersListener = db.collection("taxi_orders")
-                .where("status", "==", "Nová")
-                .orderBy("date", "desc")
-                .onSnapshot(snapshot => {
-                    const container = document.getElementById("driver-orders-container");
-                    container.innerHTML = "";
-                    
-                    if (snapshot.empty) {
-                        container.innerHTML = `<p style="color:gray; font-style:italic; text-align:center; padding:20px 0;">Žádné aktivní objednávky v systému nejsou.</p>`;
-                        document.getElementById("order-alert-popup").style.display = "none";
-                        return;
-                    }
-
-                    let isFirst = true;
-
-                    snapshot.forEach(doc => {
-                        const order = doc.data();
-                        const orderId = doc.id;
-                        
-                        // Sestavení informací o trase
-                        let d = order.date ? new Date(order.date.seconds * 1000) : new Date();
-                        let timeStr = d.toLocaleTimeString('cs-CZ', {hour: '2-digit', minute:'2-digit'});
-
-                        // Vykreslení karty do seznamu radaru
-                        let card = document.createElement("div");
-                        card.className = "driver-card";
-                        card.innerHTML = `
-                            <div style="display:flex; justify-content:space-between; font-weight:bold; color:#0f172a; margin-bottom:5px;">
-                                <span>⏰ ${timeStr} - ${order.name}</span>
-                                <span style="color:var(--green-primary); font-size:16px;">${order.price} Kč (${order.distance} km)</span>
-                            </div>
-                            <div style="font-size:13px; color:#475569; margin-bottom:8px;">
-                                🟢 <b>Odkud:</b> ${order.pickup}<br>
-                                🔴 <b>Kam:</b> ${order.dropoff}
-                            </div>
-                            <div style="font-size:13px; font-weight:bold; margin-bottom:5px;">
-                                📞 Telefon: <a href="tel:${order.phone}" style="color:#0284c7;">${order.phone}</a>
-                            </div>
-                            <button class="btn-navigate-pickup" onclick="triggerGoogleNavigation(${order.pickupLat}, ${order.pickupLng})">🗺️ Navigovat na místo nakládky</button>
-                            <button onclick="changeOrderStatus('${orderId}', 'Přijatá')" style="width:100%; margin-top:6px; background:#22c55e; color:white; border:none; padding:8px; border-radius:6px; font-weight:bold; cursor:pointer;">PŘIJMOUT OBJEDNÁVKU</button>
-                        `;
-                        container.appendChild(card);
-
-                        // Pokud se jedná o zcela novou zakázku, která ještě nepípala, vyhodit velké okno
-                        if (isFirst && orderId !== lastActiveOrderId) {
-                            lastActiveOrderId = orderId;
-                            playAlertSound(); // Spustit zvukový signál
-                            
-                            // Nastavit detaily do velkého vyskakovacího okna
-                            document.getElementById("popup-order-details").innerHTML = `
-                                <b>Zákazník:</b> ${order.name}<br>
-                                <b>Telefon:</b> ${order.phone}<br><br>
-                                🟢 <b>Místo nakládky:</b> ${order.pickup}<br>
-                                🔴 <b>Místo vykládky:</b> ${order.dropoff}<br><br>
-                                <b>Cena:</b> <b style="font-size:18px; color:var(--green-primary);">${order.price} Kč</b> (${order.distance} km)
-                            `;
-                            
-                            // Nastavit navigační tlačítko v popupu
-                            document.getElementById("btn-popup-nav").onclick = function() {
-                                triggerGoogleNavigation(order.pickupLat, order.pickupLng);
-                            };
-                            
-                            // Zobrazit popup
-                            document.getElementById("order-alert-popup").style.display = "block";
-                        }
-                        isFirst = false;
-                    });
-                }, err => {
-                    console.error("Chyba radaru:", err);
-                });
-        }
-    }
-
-    function closeDriverView() {
-        if (liveOrdersListener) {
-            liveOrdersListener(); // Zastavit odposlech databáze
-            liveOrdersListener = null;
-        }
-        document.getElementById("order-alert-popup").style.display = "none";
-        document.getElementById("driver-view").style.display = "none";
-        document.getElementById("app-container").style.display = "flex";
-        setTimeout(() => { map.invalidateSize(); }, 200);
-    }
-
-    function triggerGoogleNavigation(lat, lng) {
-        if (!lat || !lng) {
-            alert("U této zakázky chybí GPS poloha nakládky!");
-            return;
-        }
-        // Čistý a spolehlivý formát Google Maps navigace přímo na GPS
-        let url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
-        window.open(url, '_blank');
-    }
-
-    function changeOrderStatus(orderId, newStatus) {
-        if (!db) return;
-        db.collection("taxi_orders").doc(orderId).update({
-            status: newStatus
-        }).then(() => {
-            document.getElementById("order-alert-popup").style.display = "none";
-        }).catch(err => alert("Chyba při aktualizaci zakázky."));
-    }
-
-    function acceptActiveOrder() {
-        if (lastActiveOrderId) {
-            changeOrderStatus(lastActiveOrderId, 'Přijatá');
-        }
-    }
-
-    // Funkce generující hlasité pípání prohlížeče bez nutnosti externího audio souboru
-    function playAlertSound() {
-        try {
-            let ctx = new (window.AudioContext || window.webkitAudioContext)();
-            let osc = ctx.createOscillator();
-            let gain = ctx.createGain();
-            osc.type = "sine";
-            osc.frequency.value = 880; // Vyšší čistý tón
-            gain.gain.setValueAtTime(0.5, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.4);
-            
-            // Druhé pípnutí s mírným zpožděním
-            setTimeout(() => {
-                let osc2 = ctx.createOscillator();
-                let gain2 = ctx.createGain();
-                osc2.type = "sine";
-                osc2.frequency.value = 880;
-                gain2.gain.setValueAtTime(0.5, ctx.currentTime);
-                gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-                osc2.connect(gain2);
-                gain2.connect(ctx.destination);
-                osc2.start();
-                osc2.stop(ctx.currentTime + 0.4);
-            }, 200);
-        } catch(e) {
-            console.log("Zvuk nebylo možné přehrát (vyžaduje interakci s prohlížečem).");
-        }
-    }
-
-    /* ==================== STRÁNKA SPRÁVY A ADMINISTRACE ==================== */
+    // VYDRŽÍ VŠE: Tlačítko teď do funkce posílá jak text, tak přímé číselné GPS koordináty z DB
     function renderLocationLink(locStr, lat, lng) {
         if (!locStr || locStr === "Nelze zjistit" || locStr === "Zařízení nepodporuje GPS") return '<span style="color:gray; font-size:12px;">Neznámá</span>';
         let safeLocStr = locStr.replace(/'/g, "\\'");
@@ -824,18 +565,22 @@
         return `<button onclick="showLocationOnInternalMap(${latVal}, ${lngVal}, '${safeLocStr}')" class="btn-map-pick" style="padding: 4px 8px; background: white;" title="${locStr}">📍</button>`;
     }
 
+    // ABSOLUTNÍ PŘESNOST: Pokud existují přímé souřadnice lat/lng, vykreslí je ihned a ignoruje duplicitu adres!
     window.showLocationOnInternalMap = async function(lat, lng, fallbackText) {
         closeAdmin();
         let latlng = null;
         
+        // 1. Nejvyšší priorita: Pokud máme v DB uložené čisté číselné souřadnice, použijeme je
         if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
             latlng = L.latLng(lat, lng);
         } else if (fallbackText) {
+            // 2. Druhá priorita (pro starší záznamy): Pokusíme se vytáhnout GPS schovanou v závorce textu
             let gpsRegex = /(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/;
             let match = fallbackText.match(gpsRegex);
             if (match) {
                 latlng = L.latLng(parseFloat(match[1]), parseFloat(match[2]));
             } else {
+                // 3. Poslední nouzová možnost: Fulltextové vyhledávání textu přes Nominatim
                 try {
                     let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fallbackText)}&countrycodes=cz`);
                     let data = await res.json();
@@ -884,56 +629,6 @@
         if (confirm("Opravdu chcete tento záznam trvale smazat?")) {
             db.collection(collectionName).doc(docId).delete().then(() => { loadStatistics(); });
         }
-    }
-
-    function addDriver() {
-        if (!db) return;
-        const name = document.getElementById("drv-name").value.trim();
-        const phone = document.getElementById("drv-phone").value.trim();
-        const email = document.getElementById("drv-email").value.trim();
-
-        if (!name || !phone) {
-            alert("Jméno řidiče a telefonní číslo jsou povinné údaje!");
-            return;
-        }
-
-        db.collection("drivers").add({
-            name: name,
-            phone: phone,
-            email: email || "Bez e-mailu",
-            dateAdded: new Date()
-        }).then(() => {
-            document.getElementById("drv-name").value = "";
-            document.getElementById("drv-phone").value = "";
-            document.getElementById("drv-email").value = "";
-            loadStatistics();
-        }).catch(err => {
-            console.error("Chyba při ukládání řidiče:", err);
-            alert("Řidiče se nepodařilo uložit.");
-        });
-    }
-
-    function renderDriversTable(dataArray) {
-        const tbody = document.getElementById("drivers-table-body");
-        tbody.innerHTML = "";
-        
-        if (dataArray.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:gray; padding: 15px;">Žádní interní řidiči nebyli nalezeni. Zadejte nového řidiče skrze formulář výše.</td></tr>`;
-            return;
-        }
-        
-        dataArray.forEach(data => {
-            let tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td><b>${data.name || "Neznámé jméno"}</b></td>
-                <td><a href="tel:${data.phone}" class="admin-link">📞 ${data.phone || "-"}</a></td>
-                <td><a href="mailto:${data.email}" class="admin-link">✉️ ${data.email || "-"}</a></td>
-                <td style="text-align:center;">
-                    <button class="btn-delete" title="Smazat řidiče" onclick="deleteRecord('drivers', '${data.id}')">🗑️</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
     }
 
     async function deleteSelectedUsers() {
@@ -996,7 +691,6 @@
 
     function loadStatistics() {
         if (!db) return;
-        
         db.collection("registered_customers").get().then(snapshot => {
             allUsersData = [];
             snapshot.forEach(doc => { let data = doc.data(); data.id = doc.id; allUsersData.push(data); });
@@ -1004,19 +698,11 @@
             document.getElementById("total-users-count").innerText = allUsersData.length;
             applyUsersFilters();
         });
-        
         db.collection("search_history").get().then(snapshot => {
             allHistoryData = [];
             snapshot.forEach(doc => { let data = doc.data(); data.id = doc.id; allHistoryData.push(data); });
             allHistoryData.sort((a,b) => (b.date ? b.date.seconds : 0) - (a.date ? a.date.seconds : 0));
             applyHistoryFilters();
-        });
-
-        db.collection("drivers").get().then(snapshot => {
-            allDriversData = [];
-            snapshot.forEach(doc => { let data = doc.data(); data.id = doc.id; allDriversData.push(data); });
-            allDriversData.sort((a,b) => (b.dateAdded ? b.dateAdded.seconds : 0) - (a.dateAdded ? a.dateAdded.seconds : 0));
-            renderDriversTable(allDriversData);
         });
     }
 
@@ -1144,7 +830,6 @@
     function applyHistoryFilters() { let filtered = filterData(allHistoryData, "hist-date-from", "hist-date-to", "hist-search"); renderHistoryTable(filtered); }
     function resetHistoryFilters() { document.getElementById("hist-date-from").value = ""; document.getElementById("hist-date-to").value = ""; document.getElementById("hist-search").value = ""; renderHistoryTable(allHistoryData); }
 
-    /* ==================== MAPOVÉ A VÝPOČETNÍ JÁDRO ==================== */
     const BASE_ADDRESS = "Msgre. B. Staška 76, Domažlice";
     let baseCoords = L.latLng(49.440478, 12.932068); 
     let currentMode = 'mimo'; 
@@ -1267,6 +952,7 @@
 
     let lastLogTime = 0; 
 
+    // PŘIDÁNO ZDE: Náš nový Custom Router
     const SplitRouter = L.Class.extend({
         route: async function(waypoints, callback, context, options) {
             try {
@@ -1323,10 +1009,22 @@
 
         const carIcon = L.divIcon({ html: '<div style="font-size: 26px; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.4));">🚖</div>', className: 'custom-car-marker', iconSize: [32, 32], iconAnchor: [16, 16] });
 
+        // UPRAVENO ZDE: Použití našeho nového SplitRouteru místo OSRM
+        // UPRAVENO ZDE: Použití našeho nového SplitRouteru místo OSRM
         routingControl = L.Routing.control({
             waypoints: finalPoints,
             router: new SplitRouter(),
-            lineOptions: { styles: [{ color: '#00cc44', opacity: 0.9, weight: 8 }] }, 
+            // PŘIDÁNO: Vynucené vykreslení čáry z nasbíraných bodů
+            routeLine: function(route, options) {
+                return L.polyline(route.coordinates, { 
+                    color: '#00cc44', 
+                    opacity: 0.9, 
+                    weight: 8, 
+                    lineCap: 'round', 
+                    lineJoin: 'round' 
+                });
+            },
+            addWaypoints: false, // DŮLEŽITÉ: Zabrání chybám, kdyby uživatel klikl na čáru ve snaze ji přesunout
             fitSelectedRoutes: true, show: false,
             createMarker: function(i, wp, nWps) {
                 let label = "Bod trasy";
@@ -1349,17 +1047,6 @@
 
             document.getElementById('dist-val').innerText = distanceInKm;
             document.getElementById('price-val').innerText = totalPrice.toLocaleString('cs-CZ');
-
-            const navBtn = document.getElementById('btn-navigate');
-            const orderBtn = document.getElementById('btn-order-taxi');
-            
-            if (isAdminViewingRoute) {
-                if (navBtn) navBtn.style.display = 'block';
-                if (orderBtn) orderBtn.style.display = 'none';
-            } else {
-                if (navBtn) navBtn.style.display = 'none';
-                if (orderBtn) orderBtn.style.display = 'block';
-            }
 
             if (window.innerWidth <= 768) { setTimeout(() => { document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300); }
 
@@ -1384,8 +1071,8 @@
                         price: totalPrice, 
                         mode: currentMode, 
                         userLocation: loc,
-                        userLat: uLat || null,
-                        userLng: uLng || null
+                        userLat: uLat || null,  // Ukládáme přesný lat pro historii trasy
+                        userLng: uLng || null   // Ukládáme přesný lng pro historii trasy
                     }).catch(err => console.log("Nelze zapsat historii:", err));
                 };
                 if (navigator.geolocation) { 
@@ -1400,57 +1087,6 @@
             }
         });
     }
-
-    function startNavigation() {
-        if (!coordsData.pickup || !coordsData.dropoff) return;
-        let destination = `${coordsData.dropoff.lat},${coordsData.dropoff.lng}`;
-        let waypointsArr = [`${coordsData.pickup.lat},${coordsData.pickup.lng}`];
-        coordsData.waypoints.forEach(wp => { if (wp) waypointsArr.push(`${wp.lat},${wp.lng}`); });
-        let waypointsStr = encodeURIComponent(waypointsArr.join('|'));
-        let url = `https://www.google.com/maps/dir/?api=1&destination=${destination}&waypoints=${waypointsStr}&travelmode=driving`;
-        window.open(url, '_blank');
-    }
-
-    /* ODESLÁNÍ OBJEDNÁVKY DO SYSTÉMU S PŘESNÝMI GPS SOUŘADNICEMI */
-    function orderTaxi() {
-        const phone = localStorage.getItem('taxi_green_phone') || "";
-        const name = localStorage.getItem('taxi_green_name') || "";
-        const pickup = document.getElementById('pickup').value || "";
-        const dropoff = document.getElementById('dropoff').value || "";
-        const price = document.getElementById('price-val').innerText || "";
-        const distance = document.getElementById('dist-val').innerText || "";
-
-        if (!coordsData.pickup) {
-            alert("Chybí zaměření místa nakládky. Vyberte prosím místo znovu.");
-            return;
-        }
-
-        if (db) {
-            db.collection("taxi_orders").add({
-                date: new Date(),
-                name: name,
-                phone: phone,
-                pickup: pickup,
-                dropoff: dropoff,
-                pickupLat: coordsData.pickup ? coordsData.pickup.lat : null,
-                pickupLng: coordsData.pickup ? coordsData.pickup.lng : null,
-                dropoffLat: coordsData.dropoff ? coordsData.dropoff.lat : null,
-                dropoffLng: coordsData.dropoff ? coordsData.dropoff.lng : null,
-                price: price,
-                distance: distance,
-                status: "Nová"
-            }).then(() => {
-                alert("🚕 Vaše taxi bylo úspěšně přivoláno přes systém! Informace byly odeslány řidičům do vozů. Pro jistotu vás nyní přepojíme i na naši telefonní linku.");
-                window.location.href = "tel:+420607722555";
-            }).catch(err => {
-                console.error("Chyba při zápisu objednávky:", err);
-                window.location.href = "tel:+420607722555";
-            });
-        } else {
-            window.location.href = "tel:+420607722555";
-        }
-    }
-
     window.addEventListener('resize', () => { map.invalidateSize(); });
 </script>
 </body>
