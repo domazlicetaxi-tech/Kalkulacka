@@ -83,6 +83,10 @@
         #btn-order-taxi { display: none; width: 100%; padding: 14px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 14px; text-transform: uppercase; margin-top: 10px; box-shadow: 0 4px 6px rgba(37,99,235,0.2); transition: background 0.3s; line-height: 1.4;}
         #btn-order-taxi:hover { opacity: 0.9; }
 
+        /* Tlačítko pro zrušení čekající objednávky */
+        #btn-cancel-order { display: none; width: 100%; padding: 14px; background: var(--danger-red); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 14px; text-transform: uppercase; margin-top: 10px; box-shadow: 0 4px 6px rgba(239,68,68,0.2); transition: background 0.3s; line-height: 1.4; }
+        #btn-cancel-order:hover { opacity: 0.9; }
+
         #driver-info-overlay { display: none; background: white; padding: 15px; border: 2px solid var(--green-primary); border-radius: 8px; margin-top: 15px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         #driver-info-overlay h3 { margin: 0 0 5px 0; color: var(--green-dark); font-size: 16px; text-transform: uppercase; }
         #extra-time-msg { color: var(--danger-red); font-size: 13px; font-weight: bold; margin-top: 8px; padding: 6px; background: #fee2e2; border-radius: 6px; display: none; }
@@ -224,11 +228,10 @@
             </div>
         </div>
 
-        <!-- Přidán Archiv do frontendu pro zákazníka -->
         <div id="archive-overlay">
             <div class="archive-card">
                 <div class="archive-header">
-                    <h2 class="archive-title">Moje objednávky</h2>
+                    <h2 class="archive-title">Moje objednávky (posledních 24 hodin)</h2>
                     <button class="btn-close-archive" onclick="closeArchive()">Zavřít</button>
                 </div>
                 <div style="overflow-x: auto;">
@@ -297,6 +300,7 @@
             <button class="btn-calc" onclick="handleCalculateRequest()">Vypočítat cenu trasy</button>
             
             <button id="btn-order-taxi" onclick="orderTaxi()">🚕 Přivolat taxi</button>
+            <button id="btn-cancel-order" onclick="cancelPendingOrder()">❌ Zrušit objednávku</button>
             
             <div id="driver-info-overlay">
                 <h3>Vozidlo je na cestě k vám</h3>
@@ -441,7 +445,6 @@
         console.error("Chyba databáze:", error); 
     }
 
-    // ÚPRAVA PRO OBNOVENÍ PO RESTARTU APLIKACE/TELEFONU
     window.addEventListener('DOMContentLoaded', () => {
         const isRegistered = localStorage.getItem('taxi_green_registered') === 'true';
         const hasName = localStorage.getItem('taxi_green_name');
@@ -450,7 +453,6 @@
         if (isRegistered && hasName && phone) { 
             document.getElementById('registration-overlay').style.display = 'none'; 
             
-            // Automatické obnovení spojení u čekajících objednávek
             if (db) {
                 db.collection("taxi_orders")
                   .where("phone", "==", phone)
@@ -487,7 +489,6 @@
         }
     });
 
-    // PŘIDÁNY FUNKCE PRO ZÁKAZNICKÝ ARCHIV OBJEDNÁVEK (Vizuální mazání po půlnoci kromě aktivních jízd)
     function openArchive() {
         const phone = localStorage.getItem('taxi_green_phone');
         if (!phone) {
@@ -511,17 +512,16 @@
         db.collection("taxi_orders").where("phone", "==", phone).orderBy("date", "desc").limit(15).get().then(snapshot => {
             tbody.innerHTML = '';
             
-            const today = new Date();
-            today.setHours(0, 0, 0, 0); // Dnešní půlnoc
-            
+            // Nastavení limitu na přesně 24 hodin dozadu
+            const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
             let hasVisibleOrders = false;
 
             snapshot.forEach(doc => {
                 let data = doc.data();
                 let orderDate = data.date ? new Date(data.date.seconds * 1000) : null;
                 
-                // Pokud je vyřízená jízda starší než dnešní půlnoc, tak ji schováme (promažeme archiv zákazníkovi před očima)
-                if (orderDate && orderDate < today && data.status !== "Nová" && data.status !== "Potvrzeno") {
+                // Schovat jízdy starší než 24 hodin, kromě těch, které stále čekají
+                if (orderDate && orderDate < twentyFourHoursAgo && data.status !== "Nová" && data.status !== "Potvrzeno") {
                     return; 
                 }
 
@@ -533,6 +533,8 @@
                 let actionHtml = '';
                 if(data.status === "Nová" || data.status === "Potvrzeno") {
                     actionHtml = `<button class="btn-resume" onclick="resumeOrder('${doc.id}', '${data.pickup}', '${data.dropoff}', ${data.pickupLat}, ${data.pickupLng}, ${data.dropoffLat || null}, ${data.dropoffLng || null}, ${data.isQuickPickup || false})">Sledovat</button>`;
+                } else {
+                    actionHtml = `<button class="btn-resume" style="background:#64748b;" onclick="viewPastOrder('${data.pickup}', '${data.dropoff}', ${data.pickupLat}, ${data.pickupLng}, ${data.dropoffLat || null}, ${data.dropoffLng || null}, ${data.isQuickPickup || false})">Detail</button>`;
                 }
                 
                 let statusColor = "black";
@@ -551,7 +553,7 @@
             });
 
             if (!hasVisibleOrders) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Dnes nemáte žádné objednávky.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Za posledních 24 hodin nemáte žádné objednávky.</td></tr>';
             }
 
         }).catch(e => {
@@ -581,6 +583,47 @@
         }
         listenToOrder(orderId);
     }
+
+    // Načtení historie trasy, která už není aktivní, na mapu
+    window.viewPastOrder = function(pName, dName, pLat, pLng, dLat, dLng, isQuick) {
+        closeArchive();
+        document.getElementById('pickup').value = pName || "";
+        document.getElementById('dropoff').value = dName || "";
+        
+        if(pLat && pLng) coordsData.pickup = L.latLng(pLat, pLng);
+        if(dLat && dLng) coordsData.dropoff = L.latLng(dLat, dLng);
+        
+        if (coordsData.pickup && coordsData.dropoff && !isQuick) {
+            calculateRoute(false); 
+        } else if (coordsData.pickup) {
+            tempMarkers.clearLayers();
+            if (routingControl) map.removeControl(routingControl);
+            L.marker(coordsData.pickup, {icon: personIcon}).addTo(tempMarkers).bindPopup("Nakládka (historie)").openPopup();
+            map.flyTo(coordsData.pickup, 15);
+        }
+    };
+
+    // Nová funkce pro zrušení čekající objednávky
+    window.cancelPendingOrder = function() {
+        if (!currentPendingOrderId || !db) return;
+        
+        if (confirm("Opravdu si přejete zrušit čekající objednávku?")) {
+            const cancelBtn = document.getElementById('btn-cancel-order');
+            cancelBtn.innerText = "Ruším...";
+            cancelBtn.disabled = true;
+            
+            db.collection("taxi_orders").doc(currentPendingOrderId).update({
+                status: "Zrušeno"
+            }).then(() => {
+                alert("Objednávka byla úspěšně zrušena.");
+            }).catch(e => {
+                console.error(e);
+                alert("Při rušení objednávky došlo k chybě.");
+                cancelBtn.innerText = "❌ Zrušit objednávku";
+                cancelBtn.disabled = false;
+            });
+        }
+    };
 
     let resetClicks = 0;
     function resetMemoryForTesting() {
@@ -690,7 +733,6 @@
         try { db.collection("call_clicks").add({ timestamp: new Date(), device: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? "Mobil" : "PC" }); } catch(e){} 
     }
 
-    /* ===== ADMIN LOGIKA ===== */
     let titleClickCount = 0;
     let titleClickTimeout;
     let allUsersData = [];
@@ -1009,7 +1051,6 @@
     function applyHistoryFilters() { let filtered = filterData(allHistoryData, "hist-date-from", "hist-date-to", "hist-search"); renderHistoryTable(filtered); }
     function resetHistoryFilters() { document.getElementById("hist-date-from").value = ""; document.getElementById("hist-date-to").value = ""; document.getElementById("hist-search").value = ""; renderHistoryTable(allHistoryData); }
 
-    /* ===== MAPA A KALKULACE ===== */
     const BASE_ADDRESS = "Albert, Msgre. B. Staška, Domažlice"; 
     let baseCoords = L.latLng(49.440478, 12.932068); 
     let currentMode = 'mimo'; 
@@ -1142,7 +1183,6 @@
         calculateRoute(false);
     }
 
-    // ÚPRAVA PRO PŘESNOU ADRESU Z MAP VČETNÊ ČÍSLA POPISNÉHO
     async function quickPickup() {
         const isRegistered = localStorage.getItem('taxi_green_registered') === 'true';
         if (!isRegistered) { document.getElementById('registration-overlay').style.display = 'block'; return; }
@@ -1215,13 +1255,17 @@
                 try { await db.collection("taxi_orders").doc(currentPendingOrderId).delete(); } catch(e) {}
                 currentPendingOrderId = null;
                 const obtn = document.getElementById('btn-order-taxi');
+                const cbtn = document.getElementById('btn-cancel-order');
                 obtn.innerText = "🚕 Přivolat taxi"; obtn.style.backgroundColor = "#2563eb"; obtn.disabled = false;
+                cbtn.style.display = "none";
             } else {
                 return;
             }
         }
 
         document.getElementById('btn-order-taxi').style.display = 'none';
+        document.getElementById('btn-cancel-order').style.display = 'none';
+        
         const isRegistered = localStorage.getItem('taxi_green_registered') === 'true'; const hasName = localStorage.getItem('taxi_green_name'); const phone = localStorage.getItem('taxi_green_phone');
         if (!isRegistered || !hasName || !phone) { alert("Pro výpočet ceny trasy je vyžadována jednorázová aktivace."); document.getElementById('registration-overlay').style.display = 'block'; return; }
         
@@ -1269,6 +1313,7 @@
                 document.getElementById('dist-val').innerText = "???"; 
                 document.getElementById('price-val').innerText = "???";
                 document.getElementById('btn-order-taxi').style.display = 'none';
+                document.getElementById('btn-cancel-order').style.display = 'none';
             }
             return; 
         }
@@ -1387,6 +1432,7 @@
     function listenToOrder(orderId) {
         db.collection("taxi_orders").doc(orderId).onSnapshot(doc => {
             const btn = document.getElementById('btn-order-taxi'); 
+            const cancelBtn = document.getElementById('btn-cancel-order');
             const infoOverlay = document.getElementById('driver-info-overlay'); 
             const extraMsg = document.getElementById('extra-time-msg');
 
@@ -1394,11 +1440,12 @@
                 if (currentPendingOrderId === orderId) {
                     currentPendingOrderId = null;
                     toggleInputs(false); 
-                    alert("Vaše objednávka byla zrušena řidičem/dispečinkem. Můžete zadat novou.");
+                    alert("Vaše objednávka byla zrušena.");
                     btn.innerText = "🚕 Přivolat taxi";
                     btn.style.backgroundColor = "#2563eb";
                     btn.disabled = false;
                     infoOverlay.style.display = 'none';
+                    cancelBtn.style.display = 'none';
                 }
                 return;
             }
@@ -1409,8 +1456,14 @@
                 toggleInputs(false); 
                 btn.innerText = "Čekání na potvrzení dispečinkem...";
                 btn.style.backgroundColor = "var(--warning-amber)";
+                
+                // Zobrazení tlačítka zrušit
+                cancelBtn.style.display = 'block';
+                cancelBtn.innerText = "❌ Zrušit objednávku";
+                cancelBtn.disabled = false;
             } else if (data.status === "Potvrzeno") {
                 toggleInputs(true);
+                cancelBtn.style.display = 'none'; // Schovat tlačítko po potvrzení
                 
                 let spz = data.driverPlate || "Nezadáno";
                 let jmeno = data.driverName || "Neznámý";
@@ -1437,9 +1490,10 @@
             } else if (data.status === "Dokončeno" || data.status === "Zrušeno") {
                 currentPendingOrderId = null;
                 toggleInputs(false); 
+                cancelBtn.style.display = 'none';
                 if (customerDriverMarker) { map.removeLayer(customerDriverMarker); customerDriverMarker = null; }
                 infoOverlay.style.display = 'none'; 
-                btn.innerText = "Jízda dokončena"; 
+                btn.innerText = data.status === "Zrušeno" ? "Objednávka zrušena" : "Jízda dokončena"; 
                 btn.style.backgroundColor = "var(--text-muted)"; 
                 btn.disabled = true;
             }
