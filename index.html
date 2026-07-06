@@ -487,7 +487,7 @@
         }
     });
 
-    // PŘIDÁNY FUNKCE PRO ZÁKAZNICKÝ ARCHIV OBJEDNÁVEK
+    // PŘIDÁNY FUNKCE PRO ZÁKAZNICKÝ ARCHIV OBJEDNÁVEK (Vizuální mazání po půlnoci kromě aktivních jízd)
     function openArchive() {
         const phone = localStorage.getItem('taxi_green_phone');
         if (!phone) {
@@ -510,13 +510,23 @@
 
         db.collection("taxi_orders").where("phone", "==", phone).orderBy("date", "desc").limit(15).get().then(snapshot => {
             tbody.innerHTML = '';
-            if(snapshot.empty) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nemáte žádné minulé objednávky.</td></tr>';
-                return;
-            }
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Dnešní půlnoc
+            
+            let hasVisibleOrders = false;
+
             snapshot.forEach(doc => {
                 let data = doc.data();
-                let dateStr = data.date ? new Date(data.date.seconds * 1000).toLocaleDateString('cs-CZ') : "";
+                let orderDate = data.date ? new Date(data.date.seconds * 1000) : null;
+                
+                // Pokud je vyřízená jízda starší než dnešní půlnoc, tak ji schováme (promažeme archiv zákazníkovi před očima)
+                if (orderDate && orderDate < today && data.status !== "Nová" && data.status !== "Potvrzeno") {
+                    return; 
+                }
+
+                hasVisibleOrders = true;
+                let dateStr = orderDate ? orderDate.toLocaleDateString('cs-CZ') : "";
                 let timeStr = data.time || "";
                 let tr = document.createElement('tr');
                 
@@ -529,6 +539,7 @@
                 if(data.status === "Nová") statusColor = "var(--warning-amber)";
                 if(data.status === "Potvrzeno") statusColor = "var(--green-primary)";
                 if(data.status === "Zrušeno") statusColor = "var(--danger-red)";
+                if(data.status === "Dokončeno") statusColor = "var(--text-muted)";
                 
                 tr.innerHTML = `
                     <td style="font-size:12px;">${dateStr}<br><span style="color:gray;">${timeStr}</span></td>
@@ -538,8 +549,13 @@
                 `;
                 tbody.appendChild(tr);
             });
+
+            if (!hasVisibleOrders) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Dnes nemáte žádné objednávky.</td></tr>';
+            }
+
         }).catch(e => {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Chyba při načítání historie.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Chyba při načítání historie. Zkontrolujte indexy ve Firebase.</td></tr>';
             console.error(e);
         });
     }
@@ -1126,7 +1142,7 @@
         calculateRoute(false);
     }
 
-    // ÚPRAVA PRO PŘESNOU ADRESU Z MAP VČETNĚ ČÍSLA POPISNÉHO
+    // ÚPRAVA PRO PŘESNOU ADRESU Z MAP VČETNÊ ČÍSLA POPISNÉHO
     async function quickPickup() {
         const isRegistered = localStorage.getItem('taxi_green_registered') === 'true';
         if (!isRegistered) { document.getElementById('registration-overlay').style.display = 'block'; return; }
@@ -1147,7 +1163,6 @@
             let finalAddress = "Moje aktuální poloha";
             
             try {
-                // Stažení přesných dat o adrese, včetně rozpadu na číslo a ulici
                 let res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`);
                 let data = await res.json();
                 if (data && data.address) {
@@ -1176,7 +1191,6 @@
             tempMarkers.clearLayers();
             if (routingControl) map.removeControl(routingControl);
             
-            // Zachování ikonky paňáčka pro zákazníka
             L.marker(latlng, {icon: personIcon}).addTo(tempMarkers).bindPopup("Jsem zde (nakládka)").openPopup();
             map.flyTo(latlng, 15);
 
@@ -1269,7 +1283,6 @@
             router: L.Routing.osrmv1({ serviceUrl: 'https://routing.openstreetmap.de/routed-car/route/v1', useHints: false, routingOptions: { allowUTurns: true } }), 
             lineOptions: { styles: [ { color: '#004d00', opacity: 0.8, weight: 8 }, { color: '#00FF00', opacity: 1, weight: 5 } ], extendToWaypoints: true, missingRouteTolerance: 0 }, 
             fitSelectedRoutes: true, show: false, addWaypoints: false, routeWhileDragging: false,
-            // TVORBA IKONEK ZACHOVÁNA
             createMarker: function(i, wp, nWps) {
                 let label = "Bod trasy"; let mIcon = wpIcon;
                 
@@ -1413,7 +1426,6 @@
                     if (window.innerWidth <= 768) { document.getElementById('map').scrollIntoView({ behavior: 'smooth' }); }
                 };
 
-                // ZACHOVÁNA IKONKA ZELENÉHO AUTÍČKA
                 if (data.driverLat && data.driverLng) {
                     let dLatLng = L.latLng(data.driverLat, data.driverLng);
                     if (!customerDriverMarker) { 
