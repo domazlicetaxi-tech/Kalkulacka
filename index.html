@@ -216,7 +216,7 @@
             <div class="reg-card">
                 <div class="reg-title">Aktivace aplikace</div>
                 <div class="reg-info-box">
-                    <p>⚠️ Důležité podmínky pro spuštění:</p>
+                    <p>⚠️ Důležité podmínky for spuštění:</p>
                     <ul>
                         <li><b>Výpočet ceny a objednání</b> je plně přístupný až po dokončení této rychlé jednorázové registrace.</li>
                         <li><b>Skutečné údaje:</b> Registraci je nutné provést se svými pravdivými údaji. Smyšlené profily administrátor pravidelně maže.</li>
@@ -284,7 +284,7 @@
                 </div>
                 <h1 onclick="handleAdminClick()">Taxi Green</h1>
                 <a href="tel:+420607722555" class="btn-call" onclick="logCallClick()">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> 
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> 
                     VOLAT
                 </a>
             </div>
@@ -331,7 +331,7 @@
             </div>
             
             <div id="arrival-overlay">
-                <h2>Máte přistavený vůz<br>můžete nastoupit</h2>
+                <h2>Vozidlo máte přistaveno<br>můžete nastoupit</h2>
             </div>
 
             <div id="results-box">
@@ -637,9 +637,6 @@
         
         document.getElementById('pickup').value = pName || "";
         document.getElementById('dropoff').value = dName || "";
-        
-        if(pLat && pLng) coordsData.pickup = L.latLng(pLat, pLng);
-        if(dLat && dLng) coordsData.dropoff = L.latLng(dLat, dLng);
         
         const btn = document.getElementById('btn-order-taxi');
         btn.innerText = "🚕 Přivolat taxi";
@@ -1553,15 +1550,18 @@
                 arrivalOverlay.style.display = 'none';
                 driverOverlay.style.display = 'block';
 
-                let driverName = data.driverName || "Náš řidič";
-                let driverCar = data.driverCar || "Přijede brzy";
-                let driverSpz = data.driverSpz || "---";
+                // ÚPRAVA: Přidáno záložní čtení klíčů (car, spz, eta)
+                let rawDriverName = data.driverName || "Náš řidič";
+                let driverFirstName = rawDriverName.trim().split(' ')[0]; 
+                let driverCar = data.driverCar || data.car || "Neznámý vůz";
+                let driverSpz = data.driverSpz || data.spz || "---";
+                let etaText = data.eta || "Brzy"; // Zobrazení ETA
 
                 driverOverlay.innerHTML = `
                     <h3>Vozidlo je na cestě k Vám!</h3>
                     <div class="driver-details-card">
                         <div style="font-size: 16px; font-weight: bold; color: var(--text-dark);">
-                            <span style="font-size:20px;">👤</span> ${driverName}
+                            <span style="font-size:20px;">👤</span> ${driverFirstName}
                         </div>
                         <div style="margin-top: 8px; font-size: 15px; color: var(--green-dark);">
                             🚗 <b>${driverCar}</b>
@@ -1572,6 +1572,9 @@
                                 <span style="font-size:8px; font-weight:bold;">CZ</span>
                             </div>
                             <div class="spz-text">${driverSpz}</div>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 14px; font-weight: bold; color: var(--danger-red); background: #fee2e2; padding: 6px; border-radius: 6px;">
+                            ⏱️ Odhadovaný čas příjezdu: ${etaText}
                         </div>
                     </div>
                 `;
@@ -1590,8 +1593,17 @@
                 document.getElementById('btn-order-taxi').style.display = 'none';
                 cBtn.style.display = 'none';
                 
+                // ÚPRAVA: Skrytí řidiče a bezpečné vynulování jeho divu
                 driverOverlay.style.display = 'none';
+                driverOverlay.innerHTML = '';
+                
+                // ÚPRAVA: Zobrazení nového textu a oranžového overlaye
                 arrivalOverlay.style.display = 'block';
+                
+                if (customerDriverMarker) {
+                    map.removeLayer(customerDriverMarker);
+                    customerDriverMarker = null;
+                }
                 
                 if (!hasPlayedArrivalSound) {
                     playBeeps();
@@ -1605,7 +1617,7 @@
                 cBtn.style.display = 'none';
                 
                 const btnOrder = document.getElementById('btn-order-taxi');
-                btnOrder.style.display = 'block';
+                btnOrder.style.display = 'none'; // Raději skrýt úplně, dokud uživatel nevybere novou trasu
                 btnOrder.innerText = "🚕 Přivolat taxi";
                 btnOrder.style.backgroundColor = "#2563eb";
                 btnOrder.disabled = false;
@@ -1615,6 +1627,28 @@
                     customerDriverMarker = null;
                 }
                 
+                // --- ÚPRAVA: KOMPLETNÍ VYMAZÁNÍ VŠECH DAT A MAPY ---
+                // Vymazání inputů
+                document.getElementById('pickup').value = '';
+                document.getElementById('dropoff').value = '';
+                document.getElementById('waypoints-container').innerHTML = '';
+                
+                // Vymazání uložených dat aplikace
+                coordsData = { pickup: null, dropoff: null, waypoints: [] };
+                
+                // Vymazání mapy, trasy a špendlíků
+                tempMarkers.clearLayers();
+                if (routingControl) {
+                    map.removeControl(routingControl);
+                    routingControl = null;
+                }
+                map.setView([49.4405, 12.9321], 14); // Reset kamery zpět na základnu
+                
+                // Resetování cen a vzdálenosti
+                document.getElementById('dist-val').innerText = "0";
+                document.getElementById('price-val').innerText = "0";
+                // ---------------------------------------------------
+
                 currentPendingOrderId = null;
                 if (orderListener) {
                     orderListener();
@@ -1622,9 +1656,9 @@
                 }
                 
                 if (data.status === "Dokončeno") {
-                    alert("Vaše jízda byla dokončena. Děkujeme, že cestujete s Taxi Green!");
+                    alert("Vaše jízda byla dokončena. Děkujeme, že cestujete s Taxi Green! Aplikace je nyní vyčištěna a připravena pro novou objednávku.");
                 } else if (data.status === "Zrušeno") {
-                    alert("Vaše objednávka byla zrušena.");
+                    alert("Vaše objednávka byla zrušena. Aplikace je resetována.");
                 }
             }
         });
