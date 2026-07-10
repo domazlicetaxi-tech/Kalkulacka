@@ -102,6 +102,28 @@
             animation: blinkOrange 0.8s infinite alternate;
         }
         #arrival-overlay h2 { margin: 0; font-size: 18px; text-transform: uppercase; line-height: 1.4; font-weight: 900; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+        
+        /* NOVÉ CSS PRO TLAČÍTKO OK */
+        #btn-ack-arrival { 
+            margin-top: 15px; 
+            padding: 10px 30px; 
+            background: white; 
+            color: #ea580c; 
+            border: none; 
+            border-radius: 6px; 
+            font-weight: 900; 
+            font-size: 16px; 
+            cursor: pointer; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+            text-transform: uppercase; 
+            transition: transform 0.2s, background 0.2s; 
+            display: inline-block; 
+        }
+        #btn-ack-arrival:hover { 
+            transform: scale(1.05); 
+            background: #f8fafc; 
+        }
+
         @keyframes blinkOrange {
             0% { background-color: #f59e0b; box-shadow: 0 0 5px rgba(245, 158, 11, 0.5); }
             100% { background-color: #ea580c; box-shadow: 0 0 25px rgba(234, 88, 12, 1); }
@@ -269,8 +291,7 @@
                             </tr>
                         </thead>
                         <tbody id="archive-table-body">
-                            <!-- JS data tabulky archivu -->
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
             </div>
@@ -327,11 +348,11 @@
             <button id="btn-cancel-order" onclick="cancelPendingOrder()">❌ Zrušit objednávku</button>
             
             <div id="driver-info-overlay">
-                <!-- Zde se vykreslí informace o řidiči (SPZ, jméno, model) z JS -->
-            </div>
+                </div>
             
             <div id="arrival-overlay">
                 <h2>Vozidlo máte přistaveno<br>můžete nastoupit</h2>
+                <button id="btn-ack-arrival" onclick="acknowledgeArrival()">OK, vím o tom</button>
             </div>
 
             <div id="results-box">
@@ -472,23 +493,36 @@
         console.error("Chyba databáze:", error); 
     }
 
+    // NOVÝ, PRONIKAVĚJŠÍ ZVUK ALARMU/ZVONKU
     function playBeeps() {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (!AudioContext) return;
         const ctx = new AudioContext();
         for (let i = 0; i < 5; i++) {
             setTimeout(() => {
-                const osc = ctx.createOscillator();
+                const osc1 = ctx.createOscillator();
+                const osc2 = ctx.createOscillator();
                 const gain = ctx.createGain();
-                osc.connect(gain);
+                
+                osc1.connect(gain);
+                osc2.connect(gain);
                 gain.connect(ctx.destination);
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(800, ctx.currentTime);
-                gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                osc.start();
-                gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.3);
-                osc.stop(ctx.currentTime + 0.3);
-            }, i * 400); 
+                
+                osc1.type = 'square';
+                osc2.type = 'triangle';
+                
+                osc1.frequency.setValueAtTime(900, ctx.currentTime);
+                osc2.frequency.setValueAtTime(905, ctx.currentTime);
+                
+                gain.gain.setValueAtTime(0, ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.05); 
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+                
+                osc1.start(ctx.currentTime);
+                osc2.start(ctx.currentTime);
+                osc1.stop(ctx.currentTime + 0.4);
+                osc2.stop(ctx.currentTime + 0.4);
+            }, i * 600); 
         }
     }
 
@@ -1522,10 +1556,12 @@
 
     let orderListener = null;
     let hasPlayedArrivalSound = false;
+    let isArrivalAcknowledged = false; // Nová proměnná pro stav okna
 
     function listenToOrder(orderId) {
         if (orderListener) { orderListener(); }
         hasPlayedArrivalSound = false;
+        isArrivalAcknowledged = false; // Reset při každé nové objednávce
 
         orderListener = db.collection("taxi_orders").doc(orderId).onSnapshot(doc => {
             if (!doc.exists) return;
@@ -1550,12 +1586,11 @@
                 arrivalOverlay.style.display = 'none';
                 driverOverlay.style.display = 'block';
 
-                // ÚPRAVA: Přidáno záložní čtení klíčů (car, spz, eta)
                 let rawDriverName = data.driverName || "Náš řidič";
                 let driverFirstName = rawDriverName.trim().split(' ')[0]; 
                 let driverCar = data.driverCar || data.car || "Neznámý vůz";
                 let driverSpz = data.driverSpz || data.spz || "---";
-                let etaText = data.eta || "Brzy"; // Zobrazení ETA
+                let etaText = data.eta || "Brzy"; 
 
                 driverOverlay.innerHTML = `
                     <h3>Vozidlo je na cestě k Vám!</h3>
@@ -1593,12 +1628,13 @@
                 document.getElementById('btn-order-taxi').style.display = 'none';
                 cBtn.style.display = 'none';
                 
-                // ÚPRAVA: Skrytí řidiče a bezpečné vynulování jeho divu
                 driverOverlay.style.display = 'none';
                 driverOverlay.innerHTML = '';
                 
-                // ÚPRAVA: Zobrazení nového textu a oranžového overlaye
-                arrivalOverlay.style.display = 'block';
+                // Ukázat okno, pokud ho zákazník ještě neschválil
+                if (!isArrivalAcknowledged) {
+                    arrivalOverlay.style.display = 'block';
+                }
                 
                 if (customerDriverMarker) {
                     map.removeLayer(customerDriverMarker);
@@ -1617,7 +1653,7 @@
                 cBtn.style.display = 'none';
                 
                 const btnOrder = document.getElementById('btn-order-taxi');
-                btnOrder.style.display = 'none'; // Raději skrýt úplně, dokud uživatel nevybere novou trasu
+                btnOrder.style.display = 'none'; 
                 btnOrder.innerText = "🚕 Přivolat taxi";
                 btnOrder.style.backgroundColor = "#2563eb";
                 btnOrder.disabled = false;
@@ -1627,27 +1663,21 @@
                     customerDriverMarker = null;
                 }
                 
-                // --- ÚPRAVA: KOMPLETNÍ VYMAZÁNÍ VŠECH DAT A MAPY ---
-                // Vymazání inputů
                 document.getElementById('pickup').value = '';
                 document.getElementById('dropoff').value = '';
                 document.getElementById('waypoints-container').innerHTML = '';
                 
-                // Vymazání uložených dat aplikace
                 coordsData = { pickup: null, dropoff: null, waypoints: [] };
                 
-                // Vymazání mapy, trasy a špendlíků
                 tempMarkers.clearLayers();
                 if (routingControl) {
                     map.removeControl(routingControl);
                     routingControl = null;
                 }
-                map.setView([49.4405, 12.9321], 14); // Reset kamery zpět na základnu
+                map.setView([49.4405, 12.9321], 14); 
                 
-                // Resetování cen a vzdálenosti
                 document.getElementById('dist-val').innerText = "0";
                 document.getElementById('price-val').innerText = "0";
-                // ---------------------------------------------------
 
                 currentPendingOrderId = null;
                 if (orderListener) {
@@ -1663,6 +1693,12 @@
             }
         });
     }
+
+    // Funkce volaná po kliknutí na tlačítko "OK, VÍM O TOM"
+    window.acknowledgeArrival = function() {
+        isArrivalAcknowledged = true;
+        document.getElementById('arrival-overlay').style.display = 'none';
+    };
 
 </script>
 </body>
