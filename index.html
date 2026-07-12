@@ -622,7 +622,7 @@
                 if(data.status === "Nová") statusColor = "var(--warning-amber)";
                 if(data.status === "Potvrzeno" || data.status === "Přistaveno") statusColor = "var(--green-primary)";
                 if(data.status === "Zrušeno") statusColor = "var(--danger-red)";
-                if(data.status === "Dokončeno") statusColor = "var(--text-muted)";
+                if(data.status === "Dokončeno" || data.status === "Zákazník nastoupil") statusColor = "var(--text-muted)";
                 
                 tr.innerHTML = `
                     <td style="font-size:12px;">${dateStr}<br><span style="color:gray;">${timeStr}</span></td>
@@ -874,7 +874,7 @@
                     tr.style.backgroundColor = "#fee2e2"; 
                 } else if (data.status === "Potvrzeno" || data.status === "Přistaveno") {
                     tr.style.backgroundColor = "#dcfce7"; 
-                } else if (data.status === "Dokončeno" || data.status === "Zrušeno") {
+                } else if (data.status === "Dokončeno" || data.status === "Zrušeno" || data.status === "Zákazník nastoupil") {
                     tr.style.backgroundColor = "#f1f5f9"; 
                 }
                 
@@ -1156,7 +1156,7 @@
     function resetHistoryFilters() { document.getElementById("hist-date-from").value = ""; document.getElementById("hist-date-to").value = ""; document.getElementById("hist-search").value = ""; renderHistoryTable(allHistoryData); }
 
     const BASE_ADDRESS = "Albert, Msgre. B. Staška, Domažlice"; 
-    let baseCoords = L.latLng(49.440478, 12.932068); 
+    let baseCoords = L.latLng(49.439841, 12.927355); 
     let currentMode = 'mimo'; 
     
     const map = L.map('map', { zoomControl: false }).setView([49.4405, 12.9321], 14); 
@@ -1556,12 +1556,12 @@
 
     let orderListener = null;
     let hasPlayedArrivalSound = false;
-    let isArrivalAcknowledged = false; // Nová proměnná pro stav okna
+    let isArrivalAcknowledged = false;
 
     function listenToOrder(orderId) {
         if (orderListener) { orderListener(); }
         hasPlayedArrivalSound = false;
-        isArrivalAcknowledged = false; // Reset při každé nové objednávce
+        isArrivalAcknowledged = false; 
 
         orderListener = db.collection("taxi_orders").doc(orderId).onSnapshot(doc => {
             if (!doc.exists) return;
@@ -1631,7 +1631,6 @@
                 driverOverlay.style.display = 'none';
                 driverOverlay.innerHTML = '';
                 
-                // Ukázat okno, pokud ho zákazník ještě neschválil
                 if (!isArrivalAcknowledged) {
                     arrivalOverlay.style.display = 'block';
                 }
@@ -1647,49 +1646,12 @@
                 }
             }
             else if (data.status === "Dokončeno" || data.status === "Zrušeno") {
-                toggleInputs(false);
-                driverOverlay.style.display = 'none';
-                arrivalOverlay.style.display = 'none';
-                cBtn.style.display = 'none';
+                let statusMsg = data.status === "Dokončeno" 
+                    ? "Vaše jízda byla dokončena. Děkujeme, že cestujete s Taxi Green! Aplikace je nyní vyčištěna a připravena pro novou objednávku." 
+                    : "Vaše objednávka byla zrušena. Aplikace je resetována.";
                 
-                const btnOrder = document.getElementById('btn-order-taxi');
-                btnOrder.style.display = 'none'; 
-                btnOrder.innerText = "🚕 Přivolat taxi";
-                btnOrder.style.backgroundColor = "#2563eb";
-                btnOrder.disabled = false;
-                
-                if (customerDriverMarker) {
-                    map.removeLayer(customerDriverMarker);
-                    customerDriverMarker = null;
-                }
-                
-                document.getElementById('pickup').value = '';
-                document.getElementById('dropoff').value = '';
-                document.getElementById('waypoints-container').innerHTML = '';
-                
-                coordsData = { pickup: null, dropoff: null, waypoints: [] };
-                
-                tempMarkers.clearLayers();
-                if (routingControl) {
-                    map.removeControl(routingControl);
-                    routingControl = null;
-                }
-                map.setView([49.4405, 12.9321], 14); 
-                
-                document.getElementById('dist-val').innerText = "0";
-                document.getElementById('price-val').innerText = "0";
-
-                currentPendingOrderId = null;
-                if (orderListener) {
-                    orderListener();
-                    orderListener = null;
-                }
-                
-                if (data.status === "Dokončeno") {
-                    alert("Vaše jízda byla dokončena. Děkujeme, že cestujete s Taxi Green! Aplikace je nyní vyčištěna a připravena pro novou objednávku.");
-                } else if (data.status === "Zrušeno") {
-                    alert("Vaše objednávka byla zrušena. Aplikace je resetována.");
-                }
+                resetAppForNewOrder(false);
+                alert(statusMsg);
             }
         });
     }
@@ -1698,7 +1660,70 @@
     window.acknowledgeArrival = function() {
         isArrivalAcknowledged = true;
         document.getElementById('arrival-overlay').style.display = 'none';
+
+        if (currentPendingOrderId && db) {
+            // 1. Zapsání kontaktu zákazníka s vozem do Firebase
+            db.collection("taxi_orders").doc(currentPendingOrderId).update({
+                customerAcknowledged: true,
+                status: "Zákazník nastoupil" // Řidič to uvidí a převezme otěže
+            }).then(() => {
+                // 2. Vyčištění zákazníkovy aplikace pro případnou další jízdu
+                resetAppForNewOrder(true);
+            }).catch(e => {
+                console.error("Chyba při komunikaci s databází:", e);
+                // Pro jistotu vyčistíme i při chybě
+                resetAppForNewOrder(true);
+            });
+        } else {
+            resetAppForNewOrder(true);
+        }
     };
+
+    // Kompletní reset UI a uvolnění paměti pro další jízdu
+    function resetAppForNewOrder(showSuccessMessage = false) {
+        toggleInputs(false);
+        document.getElementById('driver-info-overlay').style.display = 'none';
+        document.getElementById('arrival-overlay').style.display = 'none';
+        document.getElementById('btn-cancel-order').style.display = 'none';
+        
+        const btnOrder = document.getElementById('btn-order-taxi');
+        btnOrder.style.display = 'none'; 
+        btnOrder.innerText = "🚕 Přivolat taxi";
+        btnOrder.style.backgroundColor = "#2563eb";
+        btnOrder.disabled = false;
+        
+        if (customerDriverMarker) {
+            map.removeLayer(customerDriverMarker);
+            customerDriverMarker = null;
+        }
+        
+        document.getElementById('pickup').value = '';
+        document.getElementById('dropoff').value = '';
+        document.getElementById('waypoints-container').innerHTML = '';
+        
+        coordsData = { pickup: null, dropoff: null, waypoints: [] };
+        
+        tempMarkers.clearLayers();
+        if (routingControl) {
+            map.removeControl(routingControl);
+            routingControl = null;
+        }
+        map.setView([49.4405, 12.9321], 14); 
+        
+        document.getElementById('dist-val').innerText = "0";
+        document.getElementById('price-val').innerText = "0";
+
+        // Ukončení naslouchání a odpojení objednávky
+        currentPendingOrderId = null;
+        if (orderListener) {
+            orderListener();
+            orderListener = null;
+        }
+
+        if (showSuccessMessage) {
+            alert("Přejeme šťastnou cestu! Aplikace je nyní plně odpojena a připravena pro novou objednávku.");
+        }
+    }
 
 </script>
 </body>
