@@ -1578,7 +1578,7 @@
                 driverOverlay.style.display = 'none';
                 arrivalOverlay.style.display = 'none';
             } 
-            else if (data.status === "Potvrzeno") {
+            else if (data.status === "Potvrzeno" && data.driverArrived !== true) {
                 toggleInputs(true);
                 document.getElementById('btn-order-taxi').style.display = 'none';
                 cBtn.style.display = 'none'; 
