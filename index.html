@@ -493,6 +493,30 @@
         console.error("Chyba databáze:", error); 
     }
 
+    // --- INTEGRACE AIRWAP ---
+    async function syncWithAirwap(action, payload) {
+        // Zde doplňte skutečnou URL adresu API druhé aplikace Airwap
+        const AIRWAP_ENDPOINT = "https://vasedomena.cz/api/airwap-webhook"; 
+        
+        try {
+            console.log(`Odesílám data do Airwap [${action}]:`, payload);
+            const response = await fetch(AIRWAP_ENDPOINT, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    // "Authorization": "Bearer VAS_API_KLIC" // Odkomentujte a doplňte, pokud Airwap vyžaduje ověření
+                },
+                body: JSON.stringify({ action: action, data: payload, timestamp: new Date().toISOString() })
+            });
+            if (!response.ok) {
+                console.warn("Komunikace s aplikací Airwap selhala:", response.status);
+            }
+        } catch (error) {
+            console.error("Chyba sítě při odesílání do Airwap:", error);
+        }
+    }
+    // ------------------------
+
     // NOVÝ, PRONIKAVĚJŠÍ ZVUK ALARMU/ZVONKU
     function playBeeps() {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -719,6 +743,7 @@
             db.collection("taxi_orders").doc(currentPendingOrderId).update({
                 status: "Zrušeno"
             }).then(() => {
+                syncWithAirwap("CANCEL_ORDER", { orderId: currentPendingOrderId, status: "Zrušeno" }); // Odeslání do Airwap
                 alert("Objednávka byla úspěšně zrušena.");
             }).catch(e => {
                 console.error(e);
@@ -798,9 +823,11 @@
         }
 
         if (db) { 
-            db.collection("registered_customers").add({ 
-                date: new Date(), fullName: fullName, phone: phone, email: email, device: isMobile ? "Mobil" : "PC", location: locationText, latitude: finalLat, longitude: finalLng 
-            }).then(() => { completeRegistrationWorkflow(fullName, phone, email); }).catch(err => { completeRegistrationWorkflow(fullName, phone, email); }); 
+            let regData = { date: new Date(), fullName: fullName, phone: phone, email: email, device: isMobile ? "Mobil" : "PC", location: locationText, latitude: finalLat, longitude: finalLng };
+            db.collection("registered_customers").add(regData).then(() => { 
+                syncWithAirwap("NEW_CUSTOMER", regData); // Odeslání do Airwap
+                completeRegistrationWorkflow(fullName, phone, email); 
+            }).catch(err => { completeRegistrationWorkflow(fullName, phone, email); }); 
         } else { completeRegistrationWorkflow(fullName, phone, email); }
         
         btn.innerText = originalBtnText; btn.disabled = false;
@@ -1534,6 +1561,9 @@
 
         db.collection("taxi_orders").add(orderData).then(docRef => {
             currentPendingOrderId = docRef.id;
+            orderData.id = docRef.id; // Přidání ID pro Airwap
+            syncWithAirwap("NEW_ORDER", orderData); // Odeslání do Airwap
+            
             alert("Objednávka byla úspěšně odeslána! Vyčkejte na potvrzení dispečinkem.");
             
             toggleInputs(true);
@@ -1667,6 +1697,7 @@
                 customerAcknowledged: true,
                 status: "Zákazník nastoupil" // Řidič to uvidí a převezme otěže
             }).then(() => {
+                syncWithAirwap("CUSTOMER_BOARDED", { orderId: currentPendingOrderId, status: "Zákazník nastoupil" }); // Odeslání do Airwap
                 // 2. Vyčištění zákazníkovy aplikace pro případnou další jízdu
                 resetAppForNewOrder(true);
             }).catch(e => {
