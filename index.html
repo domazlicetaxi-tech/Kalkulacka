@@ -495,7 +495,6 @@
 
     // --- INTEGRACE AIRWAP ---
     async function syncWithAirwap(action, payload) {
-        // Zde doplňte skutečnou URL adresu API druhé aplikace Airwap
         const AIRWAP_ENDPOINT = "https://vasedomena.cz/api/airwap-webhook"; 
         
         try {
@@ -504,7 +503,6 @@
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    // "Authorization": "Bearer VAS_API_KLIC" // Odkomentujte a doplňte, pokud Airwap vyžaduje ověření
                 },
                 body: JSON.stringify({ action: action, data: payload, timestamp: new Date().toISOString() })
             });
@@ -517,7 +515,6 @@
     }
     // ------------------------
 
-    // NOVÝ, PRONIKAVĚJŠÍ ZVUK ALARMU/ZVONKU
     function playBeeps() {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (!AudioContext) return;
@@ -561,7 +558,7 @@
             if (db) {
                 db.collection("taxi_orders")
                   .where("phone", "==", phone)
-                  .where("status", "in", ["Nová", "Potvrzeno", "Přistaveno"])
+                  .where("status", "in", ["Nová", "Potvrzeno", "Přistaveno", "Už jdu"])
                   .get().then(snapshot => {
                       if (!snapshot.empty) {
                           let doc = snapshot.docs[0];
@@ -624,7 +621,7 @@
                 let data = doc.data();
                 let orderDate = data.date ? new Date(data.date.seconds * 1000) : null;
                 
-                if (orderDate && orderDate < twentyFourHoursAgo && data.status !== "Nová" && data.status !== "Potvrzeno" && data.status !== "Přistaveno") {
+                if (orderDate && orderDate < twentyFourHoursAgo && data.status !== "Nová" && data.status !== "Potvrzeno" && data.status !== "Přistaveno" && data.status !== "Už jdu") {
                     return; 
                 }
 
@@ -634,7 +631,7 @@
                 let tr = document.createElement('tr');
                 
                 let actionHtml = '';
-                if(data.status === "Nová" || data.status === "Potvrzeno" || data.status === "Přistaveno") {
+                if(data.status === "Nová" || data.status === "Potvrzeno" || data.status === "Přistaveno" || data.status === "Už jdu") {
                     actionHtml = `<button class="btn-resume" onclick="resumeOrder('${doc.id}', '${data.pickup}', '${data.dropoff}', ${data.pickupLat}, ${data.pickupLng}, ${data.dropoffLat || null}, ${data.dropoffLng || null}, ${data.isQuickPickup || false})">Sledovat</button>`;
                 } else if(data.status === "Zrušeno") {
                     actionHtml = `<button class="btn-resume" style="background:var(--green-primary);" onclick="restoreOrder('${data.pickup}', '${data.dropoff}', ${data.pickupLat}, ${data.pickupLng}, ${data.dropoffLat || null}, ${data.dropoffLng || null}, ${data.isQuickPickup || false})">Obnovit</button>`;
@@ -644,9 +641,9 @@
                 
                 let statusColor = "black";
                 if(data.status === "Nová") statusColor = "var(--warning-amber)";
-                if(data.status === "Potvrzeno" || data.status === "Přistaveno") statusColor = "var(--green-primary)";
+                if(data.status === "Potvrzeno" || data.status === "Přistaveno" || data.status === "Už jdu") statusColor = "var(--green-primary)";
                 if(data.status === "Zrušeno") statusColor = "var(--danger-red)";
-                if(data.status === "Dokončeno" || data.status === "Zákazník nastoupil") statusColor = "var(--text-muted)";
+                if(data.status === "Dokončeno") statusColor = "var(--text-muted)";
                 
                 tr.innerHTML = `
                     <td style="font-size:12px;">${dateStr}<br><span style="color:gray;">${timeStr}</span></td>
@@ -743,7 +740,7 @@
             db.collection("taxi_orders").doc(currentPendingOrderId).update({
                 status: "Zrušeno"
             }).then(() => {
-                syncWithAirwap("CANCEL_ORDER", { orderId: currentPendingOrderId, status: "Zrušeno" }); // Odeslání do Airwap
+                syncWithAirwap("CANCEL_ORDER", { orderId: currentPendingOrderId, status: "Zrušeno" }); 
                 alert("Objednávka byla úspěšně zrušena.");
             }).catch(e => {
                 console.error(e);
@@ -825,7 +822,7 @@
         if (db) { 
             let regData = { date: new Date(), fullName: fullName, phone: phone, email: email, device: isMobile ? "Mobil" : "PC", location: locationText, latitude: finalLat, longitude: finalLng };
             db.collection("registered_customers").add(regData).then(() => { 
-                syncWithAirwap("NEW_CUSTOMER", regData); // Odeslání do Airwap
+                syncWithAirwap("NEW_CUSTOMER", regData); 
                 completeRegistrationWorkflow(fullName, phone, email); 
             }).catch(err => { completeRegistrationWorkflow(fullName, phone, email); }); 
         } else { completeRegistrationWorkflow(fullName, phone, email); }
@@ -899,9 +896,9 @@
                 
                 if (data.status === "Nová") {
                     tr.style.backgroundColor = "#fee2e2"; 
-                } else if (data.status === "Potvrzeno" || data.status === "Přistaveno") {
+                } else if (data.status === "Potvrzeno" || data.status === "Přistaveno" || data.status === "Už jdu") {
                     tr.style.backgroundColor = "#dcfce7"; 
-                } else if (data.status === "Dokončeno" || data.status === "Zrušeno" || data.status === "Zákazník nastoupil") {
+                } else if (data.status === "Dokončeno" || data.status === "Zrušeno") {
                     tr.style.backgroundColor = "#f1f5f9"; 
                 }
                 
@@ -1561,8 +1558,8 @@
 
         db.collection("taxi_orders").add(orderData).then(docRef => {
             currentPendingOrderId = docRef.id;
-            orderData.id = docRef.id; // Přidání ID pro Airwap
-            syncWithAirwap("NEW_ORDER", orderData); // Odeslání do Airwap
+            orderData.id = docRef.id; 
+            syncWithAirwap("NEW_ORDER", orderData); 
             
             alert("Objednávka byla úspěšně odeslána! Vyčkejte na potvrzení dispečinkem.");
             
@@ -1653,7 +1650,7 @@
                     }
                 }
             }
-            else if (data.status === "Na místě"|| data.driverArrived === true) {
+            else if (data.status === "Na místě" || data.status === "Přistaveno" || data.driverArrived === true) {
                 toggleInputs(true);
                 document.getElementById('btn-order-taxi').style.display = 'none';
                 cBtn.style.display = 'none';
@@ -1675,6 +1672,15 @@
                     hasPlayedArrivalSound = true;
                 }
             }
+            else if (data.status === "Už jdu") {
+                toggleInputs(true);
+                document.getElementById('btn-order-taxi').style.display = 'none';
+                cBtn.style.display = 'none';
+                arrivalOverlay.style.display = 'none';
+                
+                driverOverlay.style.display = 'block';
+                driverOverlay.innerHTML = `<h3>Řidič byl informován, že již jdete k vozidlu.</h3>`;
+            }
             else if (data.status === "Dokončeno" || data.status === "Zrušeno") {
                 let statusMsg = data.status === "Dokončeno" 
                     ? "Vaše jízda byla dokončena. Děkujeme, že cestujete s Taxi Green! Aplikace je nyní vyčištěna a připravena pro novou objednávku." 
@@ -1686,23 +1692,21 @@
         });
     }
 
-    // Funkce volaná po kliknutí na tlačítko "OK, VÍM O TOM"
+    // UPRAVENÁ FUNKCE PRO KLIKNUTÍ NA TLAČÍTKO "OK, VÍM O TOM"
     window.acknowledgeArrival = function() {
         isArrivalAcknowledged = true;
         document.getElementById('arrival-overlay').style.display = 'none';
 
         if (currentPendingOrderId && db) {
-            // 1. Zapsání kontaktu zákazníka s vozem do Firebase
+            // 1. Stav změněn na "Už jdu", aby se informace propsala řidiči do aplikace RW test
             db.collection("taxi_orders").doc(currentPendingOrderId).update({
                 customerAcknowledged: true,
-                status: "Zákazník nastoupil" // Řidič to uvidí a převezme otěže
+                status: "Už jdu" 
             }).then(() => {
-                syncWithAirwap("CUSTOMER_BOARDED", { orderId: currentPendingOrderId, status: "Zákazník nastoupil" }); // Odeslání do Airwap
-                // 2. Vyčištění zákazníkovy aplikace pro případnou další jízdu
-                resetAppForNewOrder(true);
+                syncWithAirwap("CUSTOMER_ON_WAY", { orderId: currentPendingOrderId, status: "Už jdu" }); 
+                // Vyčištění aplikace je nyní zakomentováno, provede se až po "Dokončeno" řidičem
             }).catch(e => {
                 console.error("Chyba při komunikaci s databází:", e);
-                // Pro jistotu vyčistíme i při chybě
                 resetAppForNewOrder(true);
             });
         } else {
@@ -1710,7 +1714,6 @@
         }
     };
 
-    // Kompletní reset UI a uvolnění paměti pro další jízdu
     function resetAppForNewOrder(showSuccessMessage = false) {
         toggleInputs(false);
         document.getElementById('driver-info-overlay').style.display = 'none';
@@ -1744,7 +1747,6 @@
         document.getElementById('dist-val').innerText = "0";
         document.getElementById('price-val').innerText = "0";
 
-        // Ukončení naslouchání a odpojení objednávky
         currentPendingOrderId = null;
         if (orderListener) {
             orderListener();
