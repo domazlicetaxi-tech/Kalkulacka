@@ -415,12 +415,13 @@
                         <th>Kontakt</th>
                         <th>Trasa</th>
                         <th>Vzdál.<br><span style="font-weight:normal;font-size:11px;">Cena</span></th>
+                        <th>Poloha<br><span style="font-weight:normal;font-size:11px;">(GPS)</span></th>
                         <th>Stav</th>
-                        <th style="min-width: 80px;">Akce</th>
+                        <th style="min-width: 100px;">Akce</th>
                     </tr>
                 </thead>
                 <tbody id="orders-table-body">
-                    <tr><td colspan="7" style="text-align:center; color:gray;">Načítám objednávky...</td></tr>
+                    <tr><td colspan="8" style="text-align:center; color:gray;">Načítám objednávky...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -898,6 +899,7 @@
     let titleClickTimeout;
     let allUsersData = [];
     let allHistoryData = [];
+    let allOrdersData = [];
 
     function handleAdminClick() {
         titleClickCount++;
@@ -920,11 +922,15 @@
             const tbody = document.getElementById('orders-table-body');
             tbody.innerHTML = '';
             if (snapshot.empty) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:gray;">Zatím žádné objednávky.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:gray;">Zatím žádné objednávky.</td></tr>';
                 return;
             }
+            allOrdersData = []; // Vynulovat mezipaměť pro vykreslení tras
             snapshot.forEach(doc => {
                 let data = doc.data();
+                data.id = doc.id;
+                allOrdersData.push(data);
+                
                 let tr = document.createElement('tr');
                 
                 if (data.status === "Nová") {
@@ -937,24 +943,59 @@
                 
                 let dateHtml = data.date ? `${new Date(data.date.seconds * 1000).toLocaleDateString('cs-CZ')}<br><span style="color:gray; font-size:11px;">${data.time || new Date(data.date.seconds * 1000).toLocaleTimeString('cs-CZ')}</span>` : "Neznámý čas";
                 
+                // Rozevírací seznam (Dropdown) pro stavy podle vašeho přání
+                let statusSelectHtml = `
+                    <select onchange="db.collection('taxi_orders').doc('${doc.id}').update({status: this.value})" style="padding:5px; font-size:12px; font-weight:bold; border-radius:6px; border:1px solid #cbd5e1; bg:white; cursor:pointer;">
+                        <option value="Nová" ${data.status === 'Nová' ? 'selected' : ''}>Nová / Nepřijatá</option>
+                        <option value="Potvrzeno" ${data.status === 'Potvrzeno' ? 'selected' : ''}>Přijata</option>
+                        <option value="Přistaveno" ${data.status === 'Přistaveno' ? 'selected' : ''}>Vyřizuje se</option>
+                        <option value="Už jdu" ${data.status === 'Už jdu' ? 'selected' : ''}>Zákazník ve voze</option>
+                        <option value="Dokončeno" ${data.status === 'Dokončeno' ? 'selected' : ''}>Ukončena</option>
+                        <option value="Zrušeno" ${data.status === 'Zrušeno' ? 'selected' : ''}>Zrušena</option>
+                    </select>
+                `;
+
                 tr.innerHTML = `
                     <td>${dateHtml}</td>
                     <td>${formatNameSplit(data.name)}</td>
                     <td><a href="tel:${data.phone}" class="admin-link">📞 ${data.phone}</a></td>
-                    <td><b>Z:</b> ${data.pickup}<br><b>Do:</b> ${data.dropoff}</td>
-                    <td>${data.distance} km<br><b style="color:var(--green-primary);">${data.price}</b></td>
-                    <td><strong>${data.status}</strong></td>
+                    <td>
+                        <b>Z:</b> ${data.pickup}<br><b>Do:</b> ${data.dropoff}
+                        <br><button style="margin-top:4px; background:white; border:1px solid #cbd5e1; padding:3px 6px; font-size:11px; border-radius:4px; cursor:pointer;" onclick="showRouteFromOrders('${doc.id}')">🗺️ Trasa</button>
+                    </td>
+                    <td>${data.distance} km<br><b style="color:var(--green-primary);">${data.price} Kč</b></td>
+                    <td style="text-align:center;">${renderLocationLink(data.pickup, data.pickupLat, data.pickupLng)}</td>
+                    <td>${statusSelectHtml}</td>
                     <td style="text-align:center;">
                         <input type="checkbox" class="order-select-cb" value="${doc.id}" style="transform: scale(1.3); cursor: pointer; margin-bottom: 6px;">
                         <br>
-                        <button class="btn-delete" title="Smazat" onclick="deleteRecord('taxi_orders', '${doc.id}')">🗑️</button>
+                        <button class="btn-delete" title="Smazat trvale" onclick="deleteRecord('taxi_orders', '${doc.id}')">🗑️ Smazat</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         });
     }
+     
+    window.showRouteFromOrders = async function(docId) {
+        let data = allOrdersData.find(d => d.id === docId); if (!data) return;
+        closeAdmin(); document.getElementById('pickup').value = data.pickup || ""; document.getElementById('dropoff').value = data.dropoff || "";
+        if (data.mode) { changeMode(data.mode); }
+        isAdminViewingRoute = true;
 
+        if (data.pickupLat && data.pickupLng && data.dropoffLat && data.dropoffLng) {
+            coordsData.pickup = L.latLng(data.pickupLat, data.pickupLng); coordsData.dropoff = L.latLng(data.dropoffLat, data.dropoffLng);
+            coordsData.waypoints = data.waypointsCoords ? data.waypointsCoords.map(c => L.latLng(c.lat, c.lng)) : []; calculateRoute(true);
+        } else {
+            try {
+                let pRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(data.pickup)}&countrycodes=cz`);
+                let pData = await pRes.json(); if (pData && pData.length > 0) coordsData.pickup = L.latLng(pData[0].lat, pData[0].lon);
+                let dRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(data.dropoff)}&countrycodes=cz`);
+                let dData = await dRes.json(); if (dData && dData.length > 0) coordsData.dropoff = L.latLng(dData[0].lat, dData[0].lon);
+                if (coordsData.pickup && coordsData.dropoff) { calculateRoute(true); } else { alert("Nepodařilo se dohledat tuto trasu v mapách."); }
+            } catch(e) { alert("Chyba při načítání trasy z mapy."); }
+        }
+    }; 
     function openAdmin() { 
         document.getElementById("app-container").style.display = "none"; 
         document.getElementById("admin-view").style.display = "block"; 
