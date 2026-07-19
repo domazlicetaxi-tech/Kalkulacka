@@ -197,7 +197,13 @@
         /* Custom Markers */
         .driver-gps-marker { background-color: white; border-radius: 50%; padding: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
         .user-admin-marker { font-size: 34px; filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.4)); transform: translate(-4px, -14px); }
-
+         /* --- NOVÉ: CSS Taby pro administraci --- */
+        .admin-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .admin-tab-btn { flex: 1; padding: 12px; background: #e2e8f0; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; color: var(--text-dark); transition: all 0.2s; min-width: 150px; text-transform: uppercase; }
+        .admin-tab-btn:hover { background: #cbd5e1; }
+        .admin-tab-btn.active { background: var(--green-primary); color: white; box-shadow: 0 4px 6px rgba(21,128,61,0.2); }
+        .admin-section { display: none; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @media (max-width: 768px) {
             html, body { height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
             #app-container { flex-direction: column; height: auto; min-height: 100vh; overflow: visible; display: block; }
@@ -373,6 +379,7 @@
     <div id="map"></div>
 </div>
 
+<!-- --- NOVÁ ADMINISTRACE --- -->
 <div id="admin-view">
     <div class="admin-header">
         <h2>Administrace - Taxi Green</h2>
@@ -383,95 +390,121 @@
         Celkový počet registrovaných uživatelů: <span id="total-users-count">0</span>
     </div>
 
-    <h3 class="admin-section-title">
-        Evidence objednávek
-        <div>
-            <button class="btn-delete" style="font-size: 14px; padding: 6px 12px; border-color: var(--danger-red); color: var(--danger-red);" onclick="deleteSelectedOrders()">🗑️ Smazat vybrané</button>
-            <button class="btn-delete" style="font-size: 14px; padding: 6px 12px; border-color: var(--danger-red); color: var(--danger-red);" onclick="deleteAllOrders()">🗑️ Smazat všechny</button>
+    <!-- Tlačítka pro přepínání záložek -->
+    <div class="admin-tabs">
+        <button class="admin-tab-btn active" onclick="showAdminSection('orders', this)">Evidence objednávek</button>
+        <button class="admin-tab-btn" onclick="showAdminSection('history', this)">Historie hledaných tras</button>
+        <button class="admin-tab-btn" onclick="showAdminSection('users', this)">Evidence uživatelů</button>
+    </div>
+
+    <!-- ZÁLOŽKA 1: Evidence objednávek -->
+    <div id="admin-section-orders" class="admin-section" style="display: block;">
+        <h3 class="admin-section-title">
+            Evidence objednávek
+            <div>
+                <button class="btn-delete" style="font-size: 14px; padding: 6px 12px; border-color: var(--danger-red); color: var(--danger-red);" onclick="deleteSelectedOrders()">🗑️ Smazat vybrané</button>
+                <button class="btn-delete" style="font-size: 14px; padding: 6px 12px; border-color: var(--danger-red); color: var(--danger-red);" onclick="deleteAllOrders()">🗑️ Smazat všechny</button>
+            </div>
+        </h3>
+        <div class="admin-table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Datum<br><span style="font-weight:normal;font-size:11px;">Čas</span></th>
+                        <th>Zákazník</th>
+                        <th>Kontakt</th>
+                        <th>Trasa</th>
+                        <th>Vzdál.<br><span style="font-weight:normal;font-size:11px;">Cena</span></th>
+                        <th>Stav</th>
+                        <th style="min-width: 80px;">Akce</th>
+                    </tr>
+                </thead>
+                <tbody id="orders-table-body">
+                    <tr><td colspan="7" style="text-align:center; color:gray;">Načítám objednávky...</td></tr>
+                </tbody>
+            </table>
         </div>
-    </h3>
-    <div class="admin-table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Datum<br><span style="font-weight:normal;font-size:11px;">Čas</span></th>
-                    <th>Zákazník</th>
-                    <th>Kontakt</th>
-                    <th>Trasa</th>
-                    <th>Vzdál.<br><span style="font-weight:normal;font-size:11px;">Cena</span></th>
-                    <th>Stav</th>
-                    <th style="min-width: 80px;">Akce</th>
-                </tr>
-            </thead>
-            <tbody id="orders-table-body">
-                <tr><td colspan="7" style="text-align:center; color:gray;">Načítám objednávky...</td></tr>
-            </tbody>
-        </table>
     </div>
 
-    <h3 class="admin-section-title">
-        Historie hledaných tras
-        <button class="btn-delete" style="font-size: 14px; padding: 6px 12px; border-color: var(--danger-red); color: var(--danger-red);" onclick="deleteAllRecords('search_history')">🗑️ Smazat historii</button>
-    </h3>
-    <div class="admin-filters">
-        <label style="font-size: 12px; margin-right: -5px;">Od:</label>
-        <input type="date" id="hist-date-from" onchange="applyHistoryFilters()">
-        <label style="font-size: 12px; margin-right: -5px; margin-left: 5px;">Do:</label>
-        <input type="date" id="hist-date-to" onchange="applyHistoryFilters()">
-        <input type="text" id="hist-search" placeholder="Hledat jméno, tel., e-mail..." style="width: 200px;" oninput="applyHistoryFilters()">
-        <button class="btn-filter-reset" onclick="resetHistoryFilters()">Zrušit filtr</button>
-    </div>
-    <div class="admin-table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Datum<br><span style="font-weight:normal;font-size:11px;">Čas</span></th>
-                    <th>Zákazník</th>
-                    <th>Kontakt</th>
-                    <th>Hledaná trasa</th>
-                    <th>Vzdál.<br><span style="font-weight:normal;font-size:11px;">Cena</span></th>
-                    <th>Poloha<br><span style="font-weight:normal;font-size:11px;">(GPS)</span></th>
-                    <th>Akce</th>
-                </tr>
-            </thead>
-            <tbody id="history-table-body">
-                <tr><td colspan="7" style="text-align:center; color:gray;">Načítám historii tras...</td></tr>
-            </tbody>
-        </table>
+    <!-- ZÁLOŽKA 2: Historie hledaných tras -->
+    <div id="admin-section-history" class="admin-section">
+        <h3 class="admin-section-title">
+            Historie hledaných tras
+            <button class="btn-delete" style="font-size: 14px; padding: 6px 12px; border-color: var(--danger-red); color: var(--danger-red);" onclick="deleteAllRecords('search_history')">🗑️ Smazat historii</button>
+        </h3>
+        <div class="admin-filters">
+            <label style="font-size: 12px; margin-right: -5px;">Od:</label>
+            <input type="date" id="hist-date-from" onchange="applyHistoryFilters()">
+            <label style="font-size: 12px; margin-right: -5px; margin-left: 5px;">Do:</label>
+            <input type="date" id="hist-date-to" onchange="applyHistoryFilters()">
+            <input type="text" id="hist-search" placeholder="Hledat jméno, tel., e-mail..." style="width: 200px;" oninput="applyHistoryFilters()">
+            <button class="btn-filter-reset" onclick="resetHistoryFilters()">Zrušit filtr</button>
+        </div>
+        <div class="admin-table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Datum<br><span style="font-weight:normal;font-size:11px;">Čas</span></th>
+                        <th>Zákazník</th>
+                        <th>Kontakt</th>
+                        <th>Hledaná trasa</th>
+                        <th>Vzdál.<br><span style="font-weight:normal;font-size:11px;">Cena</span></th>
+                        <th>Poloha<br><span style="font-weight:normal;font-size:11px;">(GPS)</span></th>
+                        <th>Akce</th>
+                    </tr>
+                </thead>
+                <tbody id="history-table-body">
+                    <tr><td colspan="7" style="text-align:center; color:gray;">Načítám historii tras...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <h3 class="admin-section-title">
-        Evidence registrovaných uživatelů
-        <button class="btn-delete" style="font-size: 14px; padding: 6px 12px; border-color: var(--danger-red); color: var(--danger-red);" onclick="deleteSelectedUsers()">🗑️ Smazat vybrané</button>
-    </h3>
-    <div class="admin-filters">
-        <label style="font-size: 12px; margin-right: -5px;">Od:</label>
-        <input type="date" id="user-date-from" onchange="applyUsersFilters()">
-        <label style="font-size: 12px; margin-right: -5px; margin-left: 5px;">Do:</label>
-        <input type="date" id="user-date-to" onchange="applyUsersFilters()">
-        <input type="text" id="user-search" placeholder="Hledat jméno, tel., e-mail..." style="width: 200px;" oninput="applyUsersFilters()">
-        <button class="btn-filter-reset" onclick="resetUsersFilters()">Zrušit filtr</button>
-    </div>
-    <div class="admin-table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Datum<br><span style="font-weight:normal;font-size:11px;">Čas</span></th>
-                    <th>Zákazník</th>
-                    <th>Kontakt</th>
-                    <th>Zařízení</th>
-                    <th>Poloha<br><span style="font-weight:normal;font-size:11px;">(GPS)</span></th>
-                    <th style="min-width: 100px;">Akce</th>
-                </tr>
-            </thead>
-            <tbody id="stats-table-body">
-                <tr><td colspan="6" style="text-align:center; color:gray;">Načítám zákazníky...</td></tr>
-            </tbody>
-        </table>
+    <!-- ZÁLOŽKA 3: Evidence registrovaných uživatelů -->
+    <div id="admin-section-users" class="admin-section">
+        <h3 class="admin-section-title">
+            Evidence registrovaných uživatelů
+            <button class="btn-delete" style="font-size: 14px; padding: 6px 12px; border-color: var(--danger-red); color: var(--danger-red);" onclick="deleteSelectedUsers()">🗑️ Smazat vybrané</button>
+        </h3>
+        <div class="admin-filters">
+            <label style="font-size: 12px; margin-right: -5px;">Od:</label>
+            <input type="date" id="user-date-from" onchange="applyUsersFilters()">
+            <label style="font-size: 12px; margin-right: -5px; margin-left: 5px;">Do:</label>
+            <input type="date" id="user-date-to" onchange="applyUsersFilters()">
+            <input type="text" id="user-search" placeholder="Hledat jméno, tel., e-mail..." style="width: 200px;" oninput="applyUsersFilters()">
+            <button class="btn-filter-reset" onclick="resetUsersFilters()">Zrušit filtr</button>
+        </div>
+        <div class="admin-table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Datum<br><span style="font-weight:normal;font-size:11px;">Čas</span></th>
+                        <th>Zákazník</th>
+                        <th>Kontakt</th>
+                        <th>Zařízení</th>
+                        <th>Poloha<br><span style="font-weight:normal;font-size:11px;">(GPS)</span></th>
+                        <th style="min-width: 100px;">Akce</th>
+                    </tr>
+                </thead>
+                <tbody id="stats-table-body">
+                    <tr><td colspan="6" style="text-align:center; color:gray;">Načítám zákazníky...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+<!-- --- KONEC NOVÉ ADMINISTRACE --- -->
 
 <script>
+    // --- NOVÁ FUNKCE: Přepínání sekcí administrace ---
+    window.showAdminSection = function(sectionId, btnElement) {
+        document.querySelectorAll('.admin-section').forEach(sec => sec.style.display = 'none');
+        document.querySelectorAll('.admin-tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('admin-section-' + sectionId).style.display = 'block';
+        if (btnElement) btnElement.classList.add('active');
+    };
+    // --------------------------------------------------
+
     const greenCarIcon = L.divIcon({ html: '<div class="driver-gps-marker"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#00FF00" width="30px" height="30px"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg></div>', className: '', iconSize: [38, 38], iconAnchor: [19, 19] });
     const personIcon = L.divIcon({ html: '<div style="font-size:32px; filter:drop-shadow(2px 2px 2px rgba(0,0,0,0.5));">🧍</div>', className: '', iconSize: [32, 32], iconAnchor: [16, 32] });
     const flagIcon = L.divIcon({ html: '<div style="font-size:32px; filter:drop-shadow(2px 2px 2px rgba(0,0,0,0.5));">🏁</div>', className: '', iconSize: [32, 32], iconAnchor: [8, 32] });
