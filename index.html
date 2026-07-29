@@ -501,21 +501,29 @@
 <!-- --- KONEC NOVÉ ADMINISTRACE --- -->
 
 <script>
-    // --- VYNUCENÍ FULLSCREENU PO PRVNÍM KLIKNUTÍ ---
+    // --- TRVALÉ VYNUCENÍ FULLSCREENU NA MOBILU ---
     function enforceCustomerFullscreen() {
         const docElm = document.documentElement;
-        // Zkontrolujeme, jestli už ve fullscreenu nejsme a jestli nejsme na velkém PC
+        
         if (!document.fullscreenElement && window.innerWidth <= 768) {
-            if (docElm.requestFullscreen) docElm.requestFullscreen();
-            else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
-            else if (docElm.mozRequestFullScreen) docElm.mozRequestFullScreen();
-            else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+            
+            if (!isStandalone) {
+                try {
+                    if (docElm.requestFullscreen) docElm.requestFullscreen();
+                    else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
+                    else if (docElm.mozRequestFullScreen) docElm.mozRequestFullScreen();
+                    else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
+                } catch (e) {
+                    console.warn("Fullscreen zamítnut prohlížečem", e);
+                }
+            }
         }
     }
 
-    // Nastražíme past: jakmile se uživatel dotkne obrazovky, skočí do fullscreenu
-    document.body.addEventListener('click', enforceCustomerFullscreen, { once: true });
-    document.body.addEventListener('touchstart', enforceCustomerFullscreen, { once: true });
+    // Aplikace se teď pokusí vrátit do fullscreenu při každém dotyku obrazovky
+    document.body.addEventListener('click', enforceCustomerFullscreen);
+    document.body.addEventListener('touchstart', enforceCustomerFullscreen);
     // --- NOVÁ FUNKCE: Přepínání sekcí administrace ---
     window.showAdminSection = function(sectionId, btnElement) {
         document.querySelectorAll('.admin-section').forEach(sec => sec.style.display = 'none');
