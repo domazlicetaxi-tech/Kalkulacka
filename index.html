@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Taxi Green Domažlice - Zákazník s Administrací</title>
-    
+    <!-- Nastavení pro skrytí lišty (režim webové aplikace) -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#15803d">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
@@ -497,6 +501,21 @@
 <!-- --- KONEC NOVÉ ADMINISTRACE --- -->
 
 <script>
+    // --- VYNUCENÍ FULLSCREENU PO PRVNÍM KLIKNUTÍ ---
+    function enforceCustomerFullscreen() {
+        const docElm = document.documentElement;
+        // Zkontrolujeme, jestli už ve fullscreenu nejsme a jestli nejsme na velkém PC
+        if (!document.fullscreenElement && window.innerWidth <= 768) {
+            if (docElm.requestFullscreen) docElm.requestFullscreen();
+            else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
+            else if (docElm.mozRequestFullScreen) docElm.mozRequestFullScreen();
+            else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
+        }
+    }
+
+    // Nastražíme past: jakmile se uživatel dotkne obrazovky, skočí do fullscreenu
+    document.body.addEventListener('click', enforceCustomerFullscreen, { once: true });
+    document.body.addEventListener('touchstart', enforceCustomerFullscreen, { once: true });
     // --- NOVÁ FUNKCE: Přepínání sekcí administrace ---
     window.showAdminSection = function(sectionId, btnElement) {
         document.querySelectorAll('.admin-section').forEach(sec => sec.style.display = 'none');
