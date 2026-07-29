@@ -676,8 +676,16 @@
                 let statusColor = "black";
                 if(data.status === "Nová") statusColor = "var(--warning-amber)";
                 if(data.status === "Potvrzeno" || data.status === "Přistaveno" || data.status === "Už jdu") statusColor = "var(--green-primary)";
+                if(data.status === "Zákazník nastoupil") statusColor = "#2563eb"; // Modrá barva pro nastoupení
                 if(data.status === "Zrušeno") statusColor = "var(--danger-red)";
                 if(data.status === "Dokončeno") statusColor = "var(--text-muted)";
+                
+                tr.innerHTML = `
+                    <td style="font-size:12px;">${dateStr}<br><span style="color:gray;">${timeStr}</span></td>
+                    <td style="font-size:12px;"><b>Z:</b> ${data.pickup}<br><b>Do:</b> ${data.dropoff}</td>
+                    <td style="font-size:12px; font-weight:bold; color:${statusColor};">${data.status}</td>
+                    <td style="text-align:center;">${actionHtml}</td>
+                `;
                 
                 tr.innerHTML = `
                     <td style="font-size:12px;">${dateStr}<br><span style="color:gray;">${timeStr}</span></td>
@@ -1655,11 +1663,12 @@
         });
     }
 
-    let orderListener = null;
+   let orderListener = null;
     let hasPlayedArrivalSound = false;
     let isArrivalAcknowledged = false;
+    let etaCountdownInterval = null; // NOVÉ: Proměnná pro odpočet
 
-    function listenToOrder(orderId) {
+   function listenToOrder(orderId) {
         if (orderListener) { orderListener(); }
         hasPlayedArrivalSound = false;
         isArrivalAcknowledged = false; 
@@ -1672,58 +1681,35 @@
             const driverOverlay = document.getElementById('driver-info-overlay');
             const arrivalOverlay = document.getElementById('arrival-overlay');
 
-            if (data.status === "Nová") {
+            if (etaCountdownInterval) { clearInterval(etaCountdownInterval); etaCountdownInterval = null; }
+
+            // 1. TERMINÁLNÍ STAVY (Nejvyšší priorita - odemknou aplikaci)
+            if (data.status === "Zákazník nastoupil") {
+                db.collection("taxi_orders").doc(orderId).update({ customerNote: "nastoupil jsem do vozu" }).catch(e => console.error(e));
+                resetAppForNewOrder(false); 
+                alert("Přejeme Vám šťastnou cestu! Aplikace je nyní uvolněna pro další objednávky.");
+                return; 
+            }
+            else if (data.status === "Dokončeno" || data.status === "Zrušeno") {
+                let statusMsg = data.status === "Dokončeno" ? 
+                    "Vaše jízda byla dokončena. Děkujeme, že cestujete s Taxi Green!" : 
+                    "Vaše objednávka byla zrušena. Aplikace je připravena pro novou objednávku.";
+                resetAppForNewOrder(false);
+                alert(statusMsg);
+                return;
+            }
+            
+            // 2. MEZISTAV: Zákazník potvrdil "Už jdu"
+            else if (data.status === "Už jdu") {
                 toggleInputs(true);
                 document.getElementById('btn-order-taxi').style.display = 'none';
-                cBtn.style.display = 'block';
-                driverOverlay.style.display = 'none';
-                arrivalOverlay.style.display = 'none';
-            } 
-            else if (data.status === "Potvrzeno" && data.driverArrived !== true) {
-                toggleInputs(true);
-                document.getElementById('btn-order-taxi').style.display = 'none';
-                cBtn.style.display = 'none'; 
-                
+                cBtn.style.display = 'none';
                 arrivalOverlay.style.display = 'none';
                 driverOverlay.style.display = 'block';
-
-                let rawDriverName = data.driverName || "Náš řidič";
-                let driverFirstName = rawDriverName.trim().split(' ')[0]; 
-                let driverCar = data.driverCar || data.car || "Neznámý vůz";
-                let driverSpz = data.driverSpz || data.spz || "---";
-                let etaText = data.eta || "Brzy"; 
-
-                driverOverlay.innerHTML = `
-                    <h3>Vozidlo je na cestě k Vám!</h3>
-                    <div class="driver-details-card">
-                        <div style="font-size: 16px; font-weight: bold; color: var(--text-dark);">
-                            <span style="font-size:20px;">👤</span> ${driverFirstName}
-                        </div>
-                        <div style="margin-top: 8px; font-size: 15px; color: var(--green-dark);">
-                            🚗 <b>${driverCar}</b>
-                        </div>
-                        <div class="spz-box">
-                            <div class="spz-eu">
-                                <span style="font-size:8px;">★</span>
-                                <span style="font-size:8px; font-weight:bold;">CZ</span>
-                            </div>
-                            <div class="spz-text">${driverSpz}</div>
-                        </div>
-                        <div style="margin-top: 10px; font-size: 14px; font-weight: bold; color: var(--danger-red); background: #fee2e2; padding: 6px; border-radius: 6px;">
-                            ⏱️ Odhadovaný čas příjezdu: ${etaText}
-                        </div>
-                    </div>
-                `;
-
-                if (data.driverLat && data.driverLng) {
-                    let dLatLng = L.latLng(data.driverLat, data.driverLng);
-                    if (!customerDriverMarker) {
-                        customerDriverMarker = L.marker(dLatLng, {icon: greenCarIcon}).addTo(map);
-                    } else {
-                        customerDriverMarker.setLatLng(dLatLng);
-                    }
-                }
+                driverOverlay.innerHTML = `<h3>Řidič byl informován, že již jdete k vozidlu.</h3>`;
             }
+            
+            // 3. Řidič je na místě 
             else if (data.status === "Na místě" || data.status === "Přistaveno" || data.driverArrived === true) {
                 toggleInputs(true);
                 document.getElementById('btn-order-taxi').style.display = 'none';
@@ -1746,23 +1732,83 @@
                     hasPlayedArrivalSound = true;
                 }
             }
-            else if (data.status === "Už jdu") {
+            
+            // 4. Potvrzeno (Řidič je na cestě)
+            else if (data.status === "Potvrzeno" && data.driverArrived !== true) {
                 toggleInputs(true);
                 document.getElementById('btn-order-taxi').style.display = 'none';
-                cBtn.style.display = 'none';
+                cBtn.style.display = 'none'; 
+                
                 arrivalOverlay.style.display = 'none';
-                
                 driverOverlay.style.display = 'block';
-                driverOverlay.innerHTML = `<h3>Řidič byl informován, že již jdete k vozidlu.</h3>`;
+
+                let rawDriverName = data.driverName || "Náš řidič";
+                let driverFirstName = rawDriverName.trim().split(' ')[0]; 
+                let driverCar = data.driverCar || data.car || "Neznámý vůz";
+                let driverSpz = data.driverSpz || data.spz || "---";
+                let initialEta = (data.eta !== undefined && data.eta !== null) ? data.eta + " min" : "Počítám...";
+
+                driverOverlay.innerHTML = `
+                    <h3>Vozidlo je na cestě k Vám!</h3>
+                    <div class="driver-details-card">
+                        <div style="font-size: 16px; font-weight: bold; color: var(--text-dark);">
+                            <span style="font-size:20px;">👤</span> ${driverFirstName}
+                        </div>
+                        <div style="margin-top: 8px; font-size: 15px; color: var(--green-dark);">
+                            🚗 <b>${driverCar}</b>
+                        </div>
+                        <div class="spz-box">
+                            <div class="spz-eu">
+                                <span style="font-size:8px;">★</span>
+                                <span style="font-size:8px; font-weight:bold;">CZ</span>
+                            </div>
+                            <div class="spz-text">${driverSpz}</div>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 14px; font-weight: bold; color: var(--danger-red); background: #fee2e2; padding: 6px; border-radius: 6px;">
+                            ⏱️ Odhadovaný čas příjezdu: <span id="eta-countdown-display">${initialEta}</span>
+                        </div>
+                    </div>
+                `;
+
+                if (data.targetArrivalTime) {
+                    etaCountdownInterval = setInterval(() => {
+                        let now = Date.now();
+                        let diffSeconds = Math.round((data.targetArrivalTime - now) / 1000);
+                        let etaDisplay = "";
+                        
+                        if (diffSeconds <= 0) {
+                            etaDisplay = "Přijíždí...";
+                        } else if (diffSeconds <= 60) {
+                            etaDisplay = diffSeconds + " s";
+                        } else {
+                            etaDisplay = Math.ceil(diffSeconds / 60) + " min";
+                        }
+                        
+                        let etaEl = document.getElementById('eta-countdown-display');
+                        if (etaEl) {
+                            etaEl.innerText = etaDisplay;
+                        }
+                    }, 1000);
+                }
+
+                if (data.driverLat && data.driverLng) {
+                    let dLatLng = L.latLng(data.driverLat, data.driverLng);
+                    if (!customerDriverMarker) {
+                        customerDriverMarker = L.marker(dLatLng, {icon: greenCarIcon}).addTo(map);
+                    } else {
+                        customerDriverMarker.setLatLng(dLatLng);
+                    }
+                }
             }
-            else if (data.status === "Dokončeno" || data.status === "Zrušeno") {
-                let statusMsg = data.status === "Dokončeno" 
-                    ? "Vaše jízda byla dokončena. Děkujeme, že cestujete s Taxi Green! Aplikace je nyní vyčištěna a připravena pro novou objednávku." 
-                    : "Vaše objednávka byla zrušena. Aplikace je resetována.";
-                
-                resetAppForNewOrder(false);
-                alert(statusMsg);
-            }
+            
+            // 5. Nová objednávka (ještě nepřiřazeno)
+            else if (data.status === "Nová") {
+                toggleInputs(true);
+                document.getElementById('btn-order-taxi').style.display = 'none';
+                cBtn.style.display = 'block';
+                driverOverlay.style.display = 'none';
+                arrivalOverlay.style.display = 'none';
+            } 
         });
     }
 
