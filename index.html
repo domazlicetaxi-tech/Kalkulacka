@@ -9,6 +9,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#15803d">
+    <link rel="manifest" href="manifest.json">
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
@@ -506,17 +508,13 @@
         const docElm = document.documentElement;
         
         if (!document.fullscreenElement && window.innerWidth <= 768) {
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-            
-            if (!isStandalone) {
-                try {
-                    if (docElm.requestFullscreen) docElm.requestFullscreen();
-                    else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
-                    else if (docElm.mozRequestFullScreen) docElm.mozRequestFullScreen();
-                    else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
-                } catch (e) {
-                    console.warn("Fullscreen zamítnut prohlížečem", e);
-                }
+            try {
+                if (docElm.requestFullscreen) docElm.requestFullscreen();
+                else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
+                else if (docElm.mozRequestFullScreen) docElm.mozRequestFullScreen();
+                else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
+            } catch (e) {
+                console.warn("Fullscreen zamítnut prohlížečem", e);
             }
         }
     }
