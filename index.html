@@ -1684,7 +1684,7 @@
             console.error("Chyba při odesílání objednávky:", err);
             alert("Chyba při odesílání objednávky. Zkuste to prosím znovu.");
             btn.disabled = false;
-            btn.innerText = "🚕 Přivolat taxi";
+            btn.innerText = "🚕 Závazně objednat a přivolat taxi";
         });
     }
 
@@ -1867,7 +1867,7 @@
         
         const btnOrder = document.getElementById('btn-order-taxi');
         btnOrder.style.display = 'none'; 
-        btnOrder.innerText = "🚕 Přivolat taxi";
+        btnOrder.innerText = "🚕 Závazně objednat a přivolat taxi";
         btnOrder.style.backgroundColor = "#2563eb";
         btnOrder.disabled = false;
         
