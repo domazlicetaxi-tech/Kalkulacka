@@ -356,7 +356,7 @@
         <div class="action-section">
             <button class="btn-calc" onclick="handleCalculateRequest()">Vypočítat cenu trasy</button>
             
-            <button id="btn-order-taxi" onclick="orderTaxi()">🚕 Přivolat taxi</button>
+            <button id="btn-order-taxi" onclick="orderTaxi()">🚕 Závazně objednat a přivolat taxi</button>
             <button id="btn-cancel-order" onclick="cancelPendingOrder()">❌ Zrušit objednávku</button>
             
             <div id="driver-info-overlay">
@@ -761,7 +761,7 @@
         document.getElementById('dropoff').value = dName || "";
         
         const btn = document.getElementById('btn-order-taxi');
-        btn.innerText = "🚕 Přivolat taxi";
+        btn.innerText = "🚕 Závazně objednat a přivolat taxi";
         btn.style.backgroundColor = "#2563eb";
         btn.disabled = false;
         btn.style.display = 'block';
@@ -1491,7 +1491,7 @@
                 currentPendingOrderId = null;
                 const obtn = document.getElementById('btn-order-taxi');
                 const cbtn = document.getElementById('btn-cancel-order');
-                obtn.innerText = "🚕 Přivolat taxi"; obtn.style.backgroundColor = "#2563eb"; obtn.disabled = false;
+                obtn.innerText = "🚕 Závazně objednat a přivolat taxi"; obtn.style.backgroundColor = "#2563eb"; obtn.disabled = false;
                 cbtn.style.display = "none";
             } else {
                 return;
