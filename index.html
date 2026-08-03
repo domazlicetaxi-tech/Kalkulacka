@@ -544,6 +544,7 @@
     let isPriceVisible = false; 
     let orderConfirmedLock = false; 
     let lastConfirmedOrderId = null;
+    let customerArchiveData = []; // Proměnná pro ukládání dat archivu zákazníka
 
     try { 
         firebase.initializeApp(firebaseConfig); 
@@ -630,6 +631,17 @@
                           
                           if(docData.pickupLat && docData.pickupLng) coordsData.pickup = L.latLng(docData.pickupLat, docData.pickupLng);
                           if(docData.dropoffLat && docData.dropoffLng) coordsData.dropoff = L.latLng(docData.dropoffLat, docData.dropoffLng);
+                          coordsData.waypoints = docData.waypointsCoords ? docData.waypointsCoords.map(c => L.latLng(c.lat, c.lng)) : [];
+
+                          document.getElementById('waypoints-container').innerHTML = '';
+                          wpCounter = 0;
+                          if (docData.waypointsCoords) {
+                              docData.waypointsCoords.forEach((c, index) => {
+                                  addWaypoint();
+                                  let wpInput = document.getElementById(`wp-input-${index}`);
+                                  if (wpInput) wpInput.value = (docData.waypointsNames && docData.waypointsNames[index]) ? docData.waypointsNames[index] : "Průjezdný bod";
+                              });
+                          }
                           
                           if (coordsData.pickup && coordsData.dropoff && !docData.isQuickPickup) {
                               calculateRoute(true);
@@ -672,12 +684,15 @@
 
         db.collection("taxi_orders").where("phone", "==", phone).orderBy("date", "desc").limit(15).get().then(snapshot => {
             tbody.innerHTML = '';
+            customerArchiveData = []; // Vyčištění pole pro nová data
             
             const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
             let hasVisibleOrders = false;
 
             snapshot.forEach(doc => {
                 let data = doc.data();
+                data.id = doc.id;
+                customerArchiveData.push(data); // Uložení do mezipaměti
                 let orderDate = data.date ? new Date(data.date.seconds * 1000) : null;
                 
                 if (orderDate && orderDate < twentyFourHoursAgo && data.status !== "Nová" && data.status !== "Potvrzeno" && data.status !== "Přistaveno" && data.status !== "Už jdu") {
@@ -691,26 +706,19 @@
                 
                 let actionHtml = '';
                 if(data.status === "Nová" || data.status === "Potvrzeno" || data.status === "Přistaveno" || data.status === "Už jdu") {
-                    actionHtml = `<button class="btn-resume" onclick="resumeOrder('${doc.id}', '${data.pickup}', '${data.dropoff}', ${data.pickupLat}, ${data.pickupLng}, ${data.dropoffLat || null}, ${data.dropoffLng || null}, ${data.isQuickPickup || false})">Sledovat</button>`;
+                    actionHtml = `<button class="btn-resume" onclick="resumeOrder('${doc.id}')">Sledovat</button>`;
                 } else if(data.status === "Zrušeno") {
-                    actionHtml = `<button class="btn-resume" style="background:var(--green-primary);" onclick="restoreOrder('${data.pickup}', '${data.dropoff}', ${data.pickupLat}, ${data.pickupLng}, ${data.dropoffLat || null}, ${data.dropoffLng || null}, ${data.isQuickPickup || false})">Obnovit</button>`;
+                    actionHtml = `<button class="btn-resume" style="background:var(--green-primary);" onclick="restoreOrder('${doc.id}')">Obnovit</button>`;
                 } else {
-                    actionHtml = `<button class="btn-resume" style="background:#64748b;" onclick="viewPastOrder('${data.pickup}', '${data.dropoff}', ${data.pickupLat}, ${data.pickupLng}, ${data.dropoffLat || null}, ${data.dropoffLng || null}, ${data.isQuickPickup || false})">Detail</button>`;
+                    actionHtml = `<button class="btn-resume" style="background:#64748b;" onclick="viewPastOrder('${doc.id}')">Detail</button>`;
                 }
                 
                 let statusColor = "black";
                 if(data.status === "Nová") statusColor = "var(--warning-amber)";
                 if(data.status === "Potvrzeno" || data.status === "Přistaveno" || data.status === "Už jdu") statusColor = "var(--green-primary)";
-                if(data.status === "Zákazník nastoupil") statusColor = "#2563eb"; // Modrá barva pro nastoupení
+                if(data.status === "Zákazník nastoupil") statusColor = "#2563eb"; 
                 if(data.status === "Zrušeno") statusColor = "var(--danger-red)";
                 if(data.status === "Dokončeno") statusColor = "var(--text-muted)";
-                
-                tr.innerHTML = `
-                    <td style="font-size:12px;">${dateStr}<br><span style="color:gray;">${timeStr}</span></td>
-                    <td style="font-size:12px;"><b>Z:</b> ${data.pickup}<br><b>Do:</b> ${data.dropoff}</td>
-                    <td style="font-size:12px; font-weight:bold; color:${statusColor};">${data.status}</td>
-                    <td style="text-align:center;">${actionHtml}</td>
-                `;
                 
                 tr.innerHTML = `
                     <td style="font-size:12px;">${dateStr}<br><span style="color:gray;">${timeStr}</span></td>
@@ -731,18 +739,31 @@
         });
     }
 
-    function resumeOrder(orderId, pName, dName, pLat, pLng, dLat, dLng, isQuick) {
+    window.resumeOrder = function(orderId) {
         closeArchive();
+        let data = customerArchiveData.find(d => d.id === orderId);
+        if(!data) return;
+
         currentPendingOrderId = orderId;
-        
-        document.getElementById('pickup').value = pName || "";
-        document.getElementById('dropoff').value = dName || "";
+        document.getElementById('pickup').value = data.pickup || "";
+        document.getElementById('dropoff').value = data.dropoff || "";
         document.getElementById('btn-order-taxi').style.display = 'block';
         
-        if(pLat && pLng) coordsData.pickup = L.latLng(pLat, pLng);
-        if(dLat && dLng) coordsData.dropoff = L.latLng(dLat, dLng);
+        if(data.pickupLat && data.pickupLng) coordsData.pickup = L.latLng(data.pickupLat, data.pickupLng);
+        if(data.dropoffLat && data.dropoffLng) coordsData.dropoff = L.latLng(data.dropoffLat, data.dropoffLng);
+        coordsData.waypoints = data.waypointsCoords ? data.waypointsCoords.map(c => L.latLng(c.lat, c.lng)) : [];
+
+        document.getElementById('waypoints-container').innerHTML = '';
+        wpCounter = 0;
+        if (data.waypointsCoords) {
+            data.waypointsCoords.forEach((c, index) => {
+                addWaypoint();
+                let wpInput = document.getElementById(`wp-input-${index}`);
+                if (wpInput) wpInput.value = (data.waypointsNames && data.waypointsNames[index]) ? data.waypointsNames[index] : "Průjezdný bod";
+            });
+        }
         
-        if (coordsData.pickup && coordsData.dropoff && !isQuick) {
+        if (coordsData.pickup && coordsData.dropoff && !data.isQuickPickup) {
             calculateRoute(true);
         } else if (coordsData.pickup) {
             tempMarkers.clearLayers();
@@ -751,24 +772,39 @@
             map.flyTo(coordsData.pickup, 15);
         }
         listenToOrder(orderId);
-    }
+    };
 
-    window.restoreOrder = function(pName, dName, pLat, pLng, dLat, dLng, isQuick) {
+    window.restoreOrder = function(orderId) {
         closeArchive();
+        let data = customerArchiveData.find(d => d.id === orderId);
+        if(!data) return;
+
         currentPendingOrderId = null; 
-        
-        document.getElementById('pickup').value = pName || "";
-        document.getElementById('dropoff').value = dName || "";
+        document.getElementById('pickup').value = data.pickup || "";
+        document.getElementById('dropoff').value = data.dropoff || "";
         
         const btn = document.getElementById('btn-order-taxi');
         btn.innerText = "🚕 Závazně objednat a přivolat taxi";
         btn.style.backgroundColor = "#2563eb";
         btn.disabled = false;
         btn.style.display = 'block';
-        
         document.getElementById('btn-cancel-order').style.display = 'none';
 
-        if (coordsData.pickup && coordsData.dropoff && !isQuick) {
+        if(data.pickupLat && data.pickupLng) coordsData.pickup = L.latLng(data.pickupLat, data.pickupLng);
+        if(data.dropoffLat && data.dropoffLng) coordsData.dropoff = L.latLng(data.dropoffLat, data.dropoffLng);
+        coordsData.waypoints = data.waypointsCoords ? data.waypointsCoords.map(c => L.latLng(c.lat, c.lng)) : [];
+
+        document.getElementById('waypoints-container').innerHTML = '';
+        wpCounter = 0;
+        if (data.waypointsCoords) {
+            data.waypointsCoords.forEach((c, index) => {
+                addWaypoint();
+                let wpInput = document.getElementById(`wp-input-${index}`);
+                if (wpInput) wpInput.value = (data.waypointsNames && data.waypointsNames[index]) ? data.waypointsNames[index] : "Průjezdný bod";
+            });
+        }
+
+        if (coordsData.pickup && coordsData.dropoff && !data.isQuickPickup) {
             calculateRoute(true);
         } else if (coordsData.pickup) {
             tempMarkers.clearLayers();
@@ -778,15 +814,29 @@
         }
     };
 
-    window.viewPastOrder = function(pName, dName, pLat, pLng, dLat, dLng, isQuick) {
+    window.viewPastOrder = function(orderId) {
         closeArchive();
-        document.getElementById('pickup').value = pName || "";
-        document.getElementById('dropoff').value = dName || "";
+        let data = customerArchiveData.find(d => d.id === orderId);
+        if(!data) return;
+
+        document.getElementById('pickup').value = data.pickup || "";
+        document.getElementById('dropoff').value = data.dropoff || "";
         
-        if(pLat && pLng) coordsData.pickup = L.latLng(pLat, pLng);
-        if(dLat && dLng) coordsData.dropoff = L.latLng(dLat, dLng);
+        if(data.pickupLat && data.pickupLng) coordsData.pickup = L.latLng(data.pickupLat, data.pickupLng);
+        if(data.dropoffLat && data.dropoffLng) coordsData.dropoff = L.latLng(data.dropoffLat, data.dropoffLng);
+        coordsData.waypoints = data.waypointsCoords ? data.waypointsCoords.map(c => L.latLng(c.lat, c.lng)) : [];
+
+        document.getElementById('waypoints-container').innerHTML = '';
+        wpCounter = 0;
+        if (data.waypointsCoords) {
+            data.waypointsCoords.forEach((c, index) => {
+                addWaypoint();
+                let wpInput = document.getElementById(`wp-input-${index}`);
+                if (wpInput) wpInput.value = (data.waypointsNames && data.waypointsNames[index]) ? data.waypointsNames[index] : "Průjezdný bod";
+            });
+        }
         
-        if (coordsData.pickup && coordsData.dropoff && !isQuick) {
+        if (coordsData.pickup && coordsData.dropoff && !data.isQuickPickup) {
             calculateRoute(false); 
         } else if (coordsData.pickup) {
             tempMarkers.clearLayers();
@@ -1596,7 +1646,15 @@
                 let now = Date.now();
                 if (db && !isAdminViewingRoute && (now - lastLogTime > 3000)) {
                     lastLogTime = now; 
-                    let saveHistory = (loc, uLat, uLng) => { 
+                    let saveHistory = (loc, uLat, uLng) => {
+                        let wpNames = [];
+                        for (let i = 0; i < coordsData.waypoints.length; i++) {
+                            if (coordsData.waypoints[i]) {
+                                let wpInput = document.getElementById(`wp-input-${i}`);
+                                wpNames.push(wpInput ? wpInput.value : "Průjezdný bod");
+                            }
+                        }
+                        
                         db.collection("search_history").add({ 
                             date: new Date(), 
                             name: localStorage.getItem('taxi_green_name') || "Neznámý uživatel", 
@@ -1609,6 +1667,7 @@
                             dropoffLat: coordsData.dropoff ? coordsData.dropoff.lat : null, 
                             dropoffLng: coordsData.dropoff ? coordsData.dropoff.lng : null,
                             waypointsCoords: coordsData.waypoints.filter(w => w !== null).map(w => ({ lat: w.lat, lng: w.lng })),
+                            waypointsNames: wpNames,
                             distance: distanceInKm,
                             price: totalPrice,
                             mode: currentMode,
@@ -1642,6 +1701,14 @@
 
         let distance = document.getElementById('dist-val').innerText;
         let price = document.getElementById('price-val').innerText;
+        
+        let wpNames = [];
+        for (let i = 0; i < coordsData.waypoints.length; i++) {
+            if (coordsData.waypoints[i]) {
+                let wpInput = document.getElementById(`wp-input-${i}`);
+                wpNames.push(wpInput ? wpInput.value : "Průjezdný bod");
+            }
+        }
 
         let orderData = {
             name: localStorage.getItem('taxi_green_name') || "Neznámý zákazník",
@@ -1654,6 +1721,7 @@
             dropoffLat: coordsData.dropoff ? coordsData.dropoff.lat : null,
             dropoffLng: coordsData.dropoff ? coordsData.dropoff.lng : null,
             waypointsCoords: coordsData.waypoints.filter(w => w !== null).map(w => ({ lat: w.lat, lng: w.lng })),
+            waypointsNames: wpNames,
             distance: distance,
             price: price,
             mode: currentMode,
@@ -1684,7 +1752,7 @@
             console.error("Chyba při odesílání objednávky:", err);
             alert("Chyba při odesílání objednávky. Zkuste to prosím znovu.");
             btn.disabled = false;
-            btn.innerText = "🚕 Závazně objednat a přivolat taxi";
+            btn.innerText = "🚕 Přivolat taxi";
         });
     }
 
@@ -1867,7 +1935,7 @@
         
         const btnOrder = document.getElementById('btn-order-taxi');
         btnOrder.style.display = 'none'; 
-        btnOrder.innerText = "🚕 Závazně objednat a přivolat taxi";
+        btnOrder.innerText = "🚕 Přivolat taxi";
         btnOrder.style.backgroundColor = "#2563eb";
         btnOrder.disabled = false;
         
