@@ -621,12 +621,24 @@
                   .where("status", "in", ["Nová", "Potvrzeno", "Přistaveno", "Už jdu"])
                   .get().then(snapshot => {
                       if (!snapshot.empty) {
-                          let doc = snapshot.docs[0];
-                          let docData = doc.data();
-                          currentPendingOrderId = doc.id;
-                          
-                          document.getElementById('pickup').value = docData.pickup || "";
-                          document.getElementById('dropoff').value = docData.dropoff || "";
+                        let doc = snapshot.docs[0];
+                        let docData = doc.data();
+                        currentPendingOrderId = doc.id;
+                        
+                        // --- OPRAVA: Obnova režimu jízdy po restartu aplikace ---
+                        if (docData.mode) {
+                            currentMode = docData.mode;
+                            document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
+                            const activeBtn = document.getElementById(`mode-${docData.mode}`);
+                            if (activeBtn) activeBtn.classList.add('active');
+                            document.getElementById('formula-text').innerText = docData.mode === 'mimo' ? 
+                                "Výpočet: (Ujeté km × 13 Kč) + 20 Kč" : 
+                                "Výpočet: (Ujeté km × 34 Kč) + 20 Kč nástupné";
+                        }
+                        // ---------------------------------------------------------
+                        
+                        document.getElementById('pickup').value = docData.pickup || "";
+                        document.getElementById('dropoff').value = docData.dropoff || "";
                           document.getElementById('btn-order-taxi').style.display = 'block';
                           
                           if(docData.pickupLat && docData.pickupLng) coordsData.pickup = L.latLng(docData.pickupLat, docData.pickupLng);
