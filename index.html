@@ -1789,7 +1789,7 @@
             if (etaCountdownInterval) { clearInterval(etaCountdownInterval); etaCountdownInterval = null; }
 
             // 1. TERMINÁLNÍ STAVY (Nejvyšší priorita - odemknou aplikaci)
-            if (data.status === "Zákazník nastoupil") {
+            if (data.status === "Zákazník nastoupil" || data.status === "Zákazník ve voze" || data.status === "Probíhá jízda" || data.status === "Nastoupil") {
                 db.collection("taxi_orders").doc(orderId).update({ customerNote: "nastoupil jsem do vozu" }).catch(e => console.error(e));
                 resetAppForNewOrder(false); 
                 alert("Přejeme Vám šťastnou cestu! Aplikace je nyní uvolněna pro další objednávky.");
