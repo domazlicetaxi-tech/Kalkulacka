@@ -233,25 +233,6 @@
 
 <div id="app-container">
     <div id="panel">
-        <!-- NOVÉ UVÍTACÍ OKNO S NÁVODEM -->
-        <div id="welcome-tutorial-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); z-index: 7000; padding: 20px; box-sizing: border-box; overflow-y: auto;">
-            <div class="reg-card">
-                <div class="reg-title">Vítejte v Taxi Green! 🚕</div>
-                <div style="font-size: 14px; line-height: 1.6; color: var(--text-dark); margin-bottom: 20px;">
-                    <p>Před první registrací pro vás máme dva rychlé tipy:</p>
-                    
-                    <h4 style="margin: 15px 0 5px 0; color: var(--green-dark);">1. Instalace na plochu (Doporučeno)</h4>
-                    <p style="margin-top: 0; font-size: 13px; color: #334155;">Tato aplikace funguje nejlépe jako klasická aplikace ve vašem telefonu.<br><br>
-                    🍎 <b>iPhone (Safari):</b> Klikněte dole na ikonu sdílení (čtvereček se šipkou) a vyberte <b>"Přidat na plochu"</b>.<br><br>
-                    🤖 <b>Android (Chrome):</b> Klikněte na tři tečky vpravo nahoře a vyberte <b>"Přidat na domovskou obrazovku"</b>.</p>
-
-                    <h4 style="margin: 20px 0 5px 0; color: var(--green-dark);">2. Ochrana údajů a poloha (GDPR)</h4>
-                    <p style="margin-top: 0; font-size: 13px; color: #334155;">Pro výpočet ceny a přistavení vozu budeme po registraci vyžadovat <b>povolení vaší polohy (GPS)</b>. Vaše jméno a telefon jsou bezpečně uloženy pouze pro účely odbavení vaší jízdy.</p>
-                </div>
-                <button class="btn-reg-submit" onclick="closeWelcomeAndShowReg()">Rozumím a chci se registrovat</button>
-            </div>
-        </div>
-        <!-- KONEC NOVÉHO OKNA -->
         
         <div id="terms-overlay">
             <div class="reg-card">
@@ -393,7 +374,7 @@
                 </div>
                 <div class="res-val"><span id="price-val">0</span> Kč</div>
             </div>
-            <div class="formula-note" id="formula-text">Výpočet: (Ujeté km × 13 Kč) + 20 Kč</div>
+            <div class="formula-note" id="formula-text">Výpočet: (Ujeté km × 13 Kč) + 20 Kč (min. 60 Kč)</div>
 
             <div class="disclaimer-bottom" onclick="resetMemoryForTesting()">
                 Tyto Ceny jsou orientační. V případě upřesnění ceny je třeba volat telefonicky nebo domluvit osobně.
@@ -626,10 +607,6 @@
         }
     }
 
-    function closeWelcomeAndShowReg() {
-        document.getElementById('welcome-tutorial-overlay').style.display = 'none';
-        document.getElementById('registration-overlay').style.display = 'block';
-    }
     window.addEventListener('DOMContentLoaded', () => {
         const isRegistered = localStorage.getItem('taxi_green_registered') === 'true';
         const hasName = localStorage.getItem('taxi_green_name');
@@ -655,8 +632,8 @@
                             const activeBtn = document.getElementById(`mode-${docData.mode}`);
                             if (activeBtn) activeBtn.classList.add('active');
                             document.getElementById('formula-text').innerText = docData.mode === 'mimo' ? 
-                                "Výpočet: (Ujeté km × 13 Kč) + 20 Kč" : 
-                                "Výpočet: (Ujeté km × 34 Kč) + 20 Kč nástupné";
+    "Výpočet: (Ujeté km × 13 Kč) + 20 Kč (min. 60 Kč)" : 
+    "Výpočet: (Ujeté km × 34 Kč) + 20 Kč (min. 60 Kč)";
                         }
                         // ---------------------------------------------------------
                         
@@ -693,8 +670,7 @@
             }
         } else { 
             localStorage.removeItem('taxi_green_registered'); 
-            // Zobrazíme nejprve uvítací návod místo přímé registrace
-            document.getElementById('welcome-tutorial-overlay').style.display = 'block'; 
+            document.getElementById('registration-overlay').style.display = 'block'; 
         }
     });
 
@@ -1407,7 +1383,7 @@
         currentMode = mode; 
         document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active')); 
         document.getElementById(`mode-${mode}`).classList.add('active'); 
-        document.getElementById('formula-text').innerText = mode === 'mimo' ? "Výpočet: (Ujeté km × 13 Kč) + 20 Kč" : "Výpočet: (Ujeté km × 34 Kč) + 20 Kč nástupné"; 
+        document.getElementById('formula-text').innerText = mode === 'mimo' ? "Výpočet: (Ujeté km × 13 Kč) + 20 Kč (min. 60 Kč)" : "Výpočet: (Ujeté km × 34 Kč) + 20 Kč (min. 60 Kč)"; 
         document.getElementById('btn-order-taxi').style.display = 'none'; 
         calculateRoute(false);
     }
@@ -1667,10 +1643,13 @@
 
         routingControl.on('routesfound', function(e) {
             let shortestRoute = e.routes[0]; 
-            let distanceInKm = (shortestRoute.summary.totalDistance / 1000).toFixed(1);
-            let totalPrice = currentMode === 'mimo' ? Math.round((distanceInKm * 13) + 20) : Math.round((distanceInKm * 34) + 20);
-            
-            if (isPriceVisible) {
+let distanceInKm = (shortestRoute.summary.totalDistance / 1000).toFixed(1);
+let totalPrice = currentMode === 'mimo' ? Math.round((distanceInKm * 13) + 20) : Math.round((distanceInKm * 34) + 20);
+
+// Zajištění minimální celkové ceny 60 Kč
+totalPrice = Math.max(totalPrice, 60);
+
+if (isPriceVisible) {
                 document.getElementById('dist-val').innerText = distanceInKm; 
                 document.getElementById('price-val').innerText = totalPrice.toLocaleString('cs-CZ');
                 
