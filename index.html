@@ -1550,11 +1550,47 @@
 
     async function quickPickup() {
         const isRegistered = localStorage.getItem('taxi_green_registered') === 'true';
-        if (!isRegistered) { document.getElementById('registration-overlay').style.display = 'block'; return; }
+        const phone = localStorage.getItem('taxi_green_phone');
         
-        if (!navigator.geolocation) return alert("Vaše zařízení nepodporuje zaměření polohy GPS.");
+        if (!isRegistered || !phone) { 
+            document.getElementById('registration-overlay').style.display = 'block'; 
+            return; 
+        }
+        
         const btn = document.getElementById('btn-quick-pickup');
         const originalText = btn.innerText;
+
+        // --- NOVÉ: Okamžitá kontrola v databázi před zaměřením polohy ---
+        if (db) {
+            btn.innerText = "Ověřuji...";
+            btn.disabled = true;
+            try {
+                const querySnapshot = await db.collection("registered_customers").where("phone", "==", phone).limit(1).get();
+                if (querySnapshot.empty) {
+                    // Účet neexistuje -> promazat paměť a zobrazit registraci
+                    localStorage.removeItem('taxi_green_registered');
+                    localStorage.removeItem('taxi_green_name');
+                    localStorage.removeItem('taxi_green_phone');
+                    localStorage.removeItem('taxi_green_email');
+                    alert("Vaše registrace byla zrušena administrátorem. Prosím zaregistrujte se znovu.");
+                    document.getElementById('registration-overlay').style.display = 'block'; 
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                    return; // Ukončíme funkci, dál nepokračujeme
+                }
+            } catch (err) {
+                console.log("Nelze ověřit v DB, pokračuji s lokálními daty.");
+            }
+        }
+        // -----------------------------------------------------------------
+
+        if (!navigator.geolocation) {
+            alert("Vaše zařízení nepodporuje zaměření polohy GPS.");
+            btn.innerText = originalText;
+            btn.disabled = false;
+            return;
+        }
+
         btn.innerText = "ZAMĚŘUJI A HLEDÁM ADRESU...";
         btn.disabled = true;
 
