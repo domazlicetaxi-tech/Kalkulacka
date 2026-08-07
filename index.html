@@ -607,7 +607,7 @@
         }
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
+   window.addEventListener('DOMContentLoaded', () => {
         const isRegistered = localStorage.getItem('taxi_green_registered') === 'true';
         const hasName = localStorage.getItem('taxi_green_name');
         const phone = localStorage.getItem('taxi_green_phone');
@@ -616,8 +616,76 @@
             document.getElementById('registration-overlay').style.display = 'none'; 
             
             if (db) {
-                db.collection("taxi_orders")
-                  .where("phone", "==", phone)
+                // NOVÉ: Okamžitá kontrola, zda zákazník nebyl smazán v administraci
+                db.collection("registered_customers").where("phone", "==", phone).limit(1).get().then(userSnapshot => {
+                    if (userSnapshot.empty) {
+                        // Zákazník byl smazán -> vyčistíme paměť a ukážeme registraci
+                        localStorage.removeItem('taxi_green_registered');
+                        localStorage.removeItem('taxi_green_name');
+                        localStorage.removeItem('taxi_green_phone');
+                        localStorage.removeItem('taxi_green_email');
+                        document.getElementById('registration-overlay').style.display = 'block';
+                        return; // Ukončíme další načítání
+                    }
+
+                    // Pokud zákazník existuje, pokračujeme načítáním jeho objednávek
+                    db.collection("taxi_orders")
+                      .where("phone", "==", phone)
+                      .where("status", "in", ["Nová", "Potvrzeno", "Přistaveno", "Už jdu"])
+                      .get().then(snapshot => {
+                          if (!snapshot.empty) {
+                            let doc = snapshot.docs[0];
+                            let docData = doc.data();
+                            currentPendingOrderId = doc.id;
+                            
+                            // Obnova režimu jízdy
+                            if (docData.mode) {
+                                currentMode = docData.mode;
+                                document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
+                                const activeBtn = document.getElementById(`mode-${docData.mode}`);
+                                if (activeBtn) activeBtn.classList.add('active');
+                                document.getElementById('formula-text').innerText = docData.mode === 'mimo' ? 
+                                    "Výpočet: (Ujeté km × 13 Kč) + 20 Kč (min. 60 Kč)" : 
+                                    "Výpočet: (Ujeté km × 34 Kč) + 20 Kč (min. 60 Kč)";
+                            }
+                            
+                            document.getElementById('pickup').value = docData.pickup || "";
+                            document.getElementById('dropoff').value = docData.dropoff || "";
+                            document.getElementById('btn-order-taxi').style.display = 'block';
+                              
+                            if(docData.pickupLat && docData.pickupLng) coordsData.pickup = L.latLng(docData.pickupLat, docData.pickupLng);
+                            if(docData.dropoffLat && docData.dropoffLng) coordsData.dropoff = L.latLng(docData.dropoffLat, docData.dropoffLng);
+                            coordsData.waypoints = docData.waypointsCoords ? docData.waypointsCoords.map(c => L.latLng(c.lat, c.lng)) : [];
+
+                            document.getElementById('waypoints-container').innerHTML = '';
+                            wpCounter = 0;
+                            if (docData.waypointsCoords) {
+                                docData.waypointsCoords.forEach((c, index) => {
+                                    addWaypoint();
+                                    let wpInput = document.getElementById(`wp-input-${index}`);
+                                    if (wpInput) wpInput.value = (docData.waypointsNames && docData.waypointsNames[index]) ? docData.waypointsNames[index] : "Průjezdný bod";
+                                });
+                            }
+                              
+                            if (coordsData.pickup && coordsData.dropoff && !docData.isQuickPickup) {
+                                calculateRoute(true);
+                            } else if (coordsData.pickup) {
+                                tempMarkers.clearLayers();
+                                if (routingControl) map.removeControl(routingControl);
+                                L.marker(coordsData.pickup, {icon: personIcon}).addTo(tempMarkers).bindPopup("Jsem zde (nakládka)").openPopup();
+                                map.flyTo(coordsData.pickup, 15);
+                            }
+
+                            listenToOrder(doc.id);
+                          }
+                      }).catch(e => console.log("Nepodařilo se načíst aktivní relace: ", e));
+                }).catch(e => console.log("Nepodařilo se ověřit uživatele: ", e));
+            }
+        } else { 
+            localStorage.removeItem('taxi_green_registered'); 
+            document.getElementById('registration-overlay').style.display = 'block'; 
+        }
+    });
                   .where("status", "in", ["Nová", "Potvrzeno", "Přistaveno", "Už jdu"])
                   .get().then(snapshot => {
                       if (!snapshot.empty) {
