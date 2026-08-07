@@ -2030,7 +2030,20 @@ if (isPriceVisible) {
             alert("Přejeme šťastnou cestu! Aplikace je nyní plně odpojena a připravena pro novou objednávku.");
         }
     }
-
+// --- Vylepšení scrollování při otevřené klávesnici (Registrace) ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Najdeme všechna textová a tel políčka v registračním okně
+    const regInputs = document.querySelectorAll('#registration-overlay input[type="text"], #registration-overlay input[type="tel"], #registration-overlay input[type="email"]');
+    
+    regInputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            // Přidáme mírné zpoždění (300 ms), aby systémová klávesnice na mobilu stihla vyskočit
+            setTimeout(() => {
+                this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+        });
+    });
+});
 </script>
 </body>
 </html>
