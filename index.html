@@ -1863,28 +1863,58 @@ if (isPriceVisible) {
             }
             
             // 3. Řidič je na místě 
-            else if (data.status === "Na místě" || data.status === "Přistaveno" || data.driverArrived === true) {
-                toggleInputs(true);
-                document.getElementById('btn-order-taxi').style.display = 'none';
-                cBtn.style.display = 'none';
-                
-                driverOverlay.style.display = 'none';
-                driverOverlay.innerHTML = '';
-                
-                if (!isArrivalAcknowledged) {
-                    arrivalOverlay.style.display = 'block';
+else if (data.status === "Na místě" || data.status === "Přistaveno" || data.driverArrived === true) {
+    toggleInputs(true);
+    document.getElementById('btn-order-taxi').style.display = 'none';
+    cBtn.style.display = 'none';
+    
+    driverOverlay.style.display = 'none';
+    driverOverlay.innerHTML = '';
+    
+    if (!isArrivalAcknowledged) {
+        arrivalOverlay.style.display = 'block';
+    }
+    
+    if (customerDriverMarker) {
+        map.removeLayer(customerDriverMarker);
+        customerDriverMarker = null;
+    }
+    
+    if (!hasPlayedArrivalSound) {
+        playBeeps(); // Nejprve to zapípá
+        
+        // Přečtení hlášky po 3 sekundách (aby to nekřičelo přes pípání)
+        setTimeout(() => {
+            // TENTO ŘÁDEK CHYBĚL:
+            const spolehlivaHlaska = () => {
+                if (!isArrivalAcknowledged && 'speechSynthesis' in window) {
+                    const msg = new SpeechSynthesisUtterance("Hej kámo auto už máš přistavené stiskni vím o tom a mazej nastoupit");
+                    msg.lang = 'cs-CZ';
+                    msg.volume = 1; 
+                    msg.rate = 1.1; // Lehké zrychlení (1.0 je základ, 1.1 je o 10 % rychlejší)
+                    msg.pitch = 1.2; // Mírné zvýšení hlasu zní často přirozeněji
+
+                    // Pokusíme se najít kvalitnější český hlas v zařízení zákazníka
+                    const voices = window.speechSynthesis.getVoices();
+                    const czechVoices = voices.filter(v => v.lang.includes('cs'));
+                    
+                    if (czechVoices.length > 0) {
+                        // Zkusíme najít hlas od Googlu (bývá na Androidu nejhezčí)
+                        const premiumVoice = czechVoices.find(v => v.name.includes('Google')) || czechVoices[0];
+                        msg.voice = premiumVoice;
+                    }
+                    window.speechSynthesis.speak(msg);
                 }
-                
-                if (customerDriverMarker) {
-                    map.removeLayer(customerDriverMarker);
-                    customerDriverMarker = null;
-                }
-                
-                if (!hasPlayedArrivalSound) {
-                    playBeeps();
-                    hasPlayedArrivalSound = true;
-                }
-            }
+            };
+            
+            spolehlivaHlaska(); // Přečte poprvé
+            // Uložíme interval globálně, abychom ho mohli vypnout
+            window.hlaskaInterval = setInterval(spolehlivaHlaska, 10000); // Opakuje každých 10 sekund
+        }, 3000);
+
+        hasPlayedArrivalSound = true;
+    }
+}
             
             // 4. Potvrzeno (Řidič je na cestě)
             else if (data.status === "Potvrzeno" && data.driverArrived !== true) {
@@ -1969,7 +1999,14 @@ if (isPriceVisible) {
     window.acknowledgeArrival = function() {
         isArrivalAcknowledged = true;
         document.getElementById('arrival-overlay').style.display = 'none';
-
+        
+        // NOVÉ: Zastavení opakování hlasové hlášky
+    if (window.hlaskaInterval) {
+        clearInterval(window.hlaskaInterval);
+    }
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+    }
         if (currentPendingOrderId && db) {
             // 1. Stav změněn na "Už jdu", aby se informace propsala řidiči do aplikace RW test
             db.collection("taxi_orders").doc(currentPendingOrderId).update({
