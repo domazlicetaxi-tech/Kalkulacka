@@ -1,0 +1,15 @@
+{
+  "name": "Taxi Green Domažlice",
+  "short_name": "Taxi Green",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#15803d",
+  "icons": [
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Car_icon_front_green.svg/512px-Car_icon_front_green.svg.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
