@@ -109,7 +109,7 @@
         }
         #arrival-overlay h2 { margin: 0; font-size: 18px; text-transform: uppercase; line-height: 1.4; font-weight: 900; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
         
-        /* NOVÉ CSS PRO TLAČÍTKO OK */
+        /* TLAČÍTKO OK */
         #btn-ack-arrival { 
             margin-top: 15px; 
             padding: 10px 30px; 
@@ -150,10 +150,11 @@
 
         #map { flex: 1; height: 100%; width: 100%; z-index: 1; }
 
-        /* Registration Overlay */
-        #registration-overlay, #terms-overlay, #archive-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 5000; padding: 20px; box-sizing: border-box; overflow-y: auto; }
-        #terms-overlay { z-index: 6000; }
-        #archive-overlay { z-index: 5500; }
+        /* --- OBRÁCENÁ LOGIKA: Registrace je od začátku vidět (display: block) --- */
+        #registration-overlay { display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 5000; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        #terms-overlay, #archive-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 5000; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        /* ------------------------------------------------------------------------ */
+
         .reg-card, .archive-card { background: white; max-width: 500px; margin: 20px auto; padding: 25px 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); box-sizing: border-box; position: relative; z-index: 9999; transform: translateZ(0); }
         .archive-card { max-width: 650px; }
         .reg-title, .archive-title { color: var(--green-dark); font-size: 22px; font-weight: 800; text-transform: uppercase; margin-bottom: 15px; border-bottom: 3px solid var(--green-primary); padding-bottom: 8px; text-align: center; }
@@ -203,13 +204,60 @@
         /* Custom Markers */
         .driver-gps-marker { background-color: white; border-radius: 50%; padding: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
         .user-admin-marker { font-size: 34px; filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.4)); transform: translate(-4px, -14px); }
-         /* --- NOVÉ: CSS Taby pro administraci --- */
+         /* CSS Taby pro administraci */
         .admin-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .admin-tab-btn { flex: 1; padding: 12px; background: #e2e8f0; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; color: var(--text-dark); transition: all 0.2s; min-width: 150px; text-transform: uppercase; }
         .admin-tab-btn:hover { background: #cbd5e1; }
         .admin-tab-btn.active { background: var(--green-primary); color: white; box-shadow: 0 4px 6px rgba(21,128,61,0.2); }
         .admin-section { display: none; animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- PWA INSTALAČNÍ BANNER --- */
+        #pwa-install-banner {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
+            background: var(--green-primary);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            z-index: 100000;
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.5;
+            border: 2px solid #bbf7d0;
+            box-sizing: border-box;
+        }
+        .pwa-btn {
+            background: white;
+            color: var(--green-primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 900;
+            margin-top: 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 14px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .pwa-close {
+            position: absolute;
+            top: 5px;
+            right: 12px;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0.8;
+        }
+        .pwa-close:hover { opacity: 1; }
+
         @media (max-width: 768px) {
             html, body { height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
             #app-container { flex-direction: column; height: auto; min-height: 100vh; overflow: visible; display: block; }
@@ -230,6 +278,16 @@
     </style>
 </head>
 <body>
+
+<!-- Instalační banner (Android & iOS) -->
+<div id="pwa-install-banner">
+    <span class="pwa-close" onclick="document.getElementById('pwa-install-banner').style.display='none'">×</span>
+    <div id="pwa-text">
+        <b>💡 Uložte si Taxi Green na plochu!</b><br>
+        Aplikace si vás bude pamatovat, nebudete se muset znovu registrovat a urychlíte si příští objednávku.
+    </div>
+    <button id="pwa-install-btn" class="pwa-btn" style="display:none;">Nainstalovat aplikaci</button>
+</div>
 
 <div id="app-container">
     <div id="panel">
@@ -503,116 +561,78 @@
 <!-- --- KONEC NOVÉ ADMINISTRACE --- -->
 
 <script>
-    // --- TRVALÉ VYNUCENÍ FULLSCREENU NA MOBILU ---
-    function enforceCustomerFullscreen() {
-        const docElm = document.documentElement;
+    // --- ODEMKNUTÍ ZVUKU PRO iOS (SAFARI) ---
+    let audioCtx = null;
+    function unlockAudioIOS() {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!audioCtx && AudioContext) {
+            audioCtx = new AudioContext();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
         
-        if (!document.fullscreenElement && window.innerWidth <= 768) {
-            try {
-                if (docElm.requestFullscreen) docElm.requestFullscreen();
-                else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
-                else if (docElm.mozRequestFullScreen) docElm.mozRequestFullScreen();
-                else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
-            } catch (e) {
-                console.warn("Fullscreen zamítnut prohlížečem", e);
-            }
+        if ('speechSynthesis' in window) {
+            const silentUtterance = new SpeechSynthesisUtterance('');
+            silentUtterance.volume = 0; 
+            window.speechSynthesis.speak(silentUtterance);
         }
     }
 
-    // Aplikace se teď pokusí vrátit do fullscreenu při každém dotyku obrazovky
-    document.body.addEventListener('click', enforceCustomerFullscreen);
-    document.body.addEventListener('touchstart', enforceCustomerFullscreen);
-    // --- NOVÁ FUNKCE: Přepínání sekcí administrace ---
-    window.showAdminSection = function(sectionId, btnElement) {
-        document.querySelectorAll('.admin-section').forEach(sec => sec.style.display = 'none');
-        document.querySelectorAll('.admin-tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById('admin-section-' + sectionId).style.display = 'block';
-        if (btnElement) btnElement.classList.add('active');
-    };
-    // --------------------------------------------------
+    // --- PWA INSTALACE A KONTROLA REGISTRACE ---
+    let deferredPrompt;
+    
+    window.addEventListener('DOMContentLoaded', () => {
+        // --- LOGIKA PWA BANNERU ---
+        const installBanner = document.getElementById('pwa-install-banner');
+        const installBtn = document.getElementById('pwa-install-btn');
+        const pwaText = document.getElementById('pwa-text');
+        
+        // 1. Detekce pro ANDROID (Chrome, Edge atd.)
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBanner.style.display = 'block';
+            installBtn.style.display = 'inline-block';
+        });
 
-    const greenCarIcon = L.divIcon({ html: '<div class="driver-gps-marker"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#00FF00" width="30px" height="30px"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg></div>', className: '', iconSize: [38, 38], iconAnchor: [19, 19] });
-    const personIcon = L.divIcon({ html: '<div style="font-size:32px; filter:drop-shadow(2px 2px 2px rgba(0,0,0,0.5));">🧍</div>', className: '', iconSize: [32, 32], iconAnchor: [16, 32] });
-    const flagIcon = L.divIcon({ html: '<div style="font-size:32px; filter:drop-shadow(2px 2px 2px rgba(0,0,0,0.5));">🏁</div>', className: '', iconSize: [32, 32], iconAnchor: [8, 32] });
-    const wpIcon = L.divIcon({ html: '<div style="font-size:20px; filter:drop-shadow(2px 2px 2px rgba(0,0,0,0.5));">🔵</div>', className: '', iconSize: [20, 20], iconAnchor: [10, 10] });
-    const baseIcon = L.divIcon({ html: '<div style="font-size:32px; filter:drop-shadow(2px 2px 2px rgba(0,0,0,0.5));">🏢</div>', className: '', iconSize: [32, 32], iconAnchor: [16, 32] });
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    installBanner.style.display = 'none';
+                }
+                deferredPrompt = null;
+            }
+        });
 
-    const firebaseConfig = { apiKey: "AIzaSyBU-wAdjtrC3wwkTulv432KfVVghnujYfg", authDomain: "kalkula-641ff.firebaseapp.com", projectId: "kalkula-641ff", storageBucket: "kalkula-641ff.firebasestorage.app", messagingSenderId: "126206326606", appId: "1:126206326606:web:2f391fa66e7f5bc54b901f" };
-    let db = null; 
-    let isAdminViewingRoute = false;
-    let currentPendingOrderId = null; 
-    let isPriceVisible = false; 
-    let orderConfirmedLock = false; 
-    let lastConfirmedOrderId = null;
-    let customerArchiveData = []; // Proměnná pro ukládání dat archivu zákazníka
+        // 2. Detekce pro APPLE (iOS Safari)
+        const isIos = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+        const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
 
-    try { 
-        firebase.initializeApp(firebaseConfig); 
-        db = firebase.firestore(); 
-    } catch (error) { 
-        console.error("Chyba databáze:", error); 
-    }
+        if (isIos() && !isInStandaloneMode()) {
+            installBanner.style.display = 'block';
+            pwaText.innerHTML = "<b>💡 Uložte si aplikaci na plochu!</b><br>Zamezíte tak ztrátě registrace.<br><br>Klikněte dole na ikonu sdílení (čtvereček se šipkou) a zvolte <b>'Přidat na plochu'</b>.";
+            // Banner na iPhonu po 10 vteřinách sám zmizí, aby neblokoval mapu
+            setTimeout(() => { installBanner.style.display = 'none'; }, 10000); 
+        }
 
-    // --- INTEGRACE AIRWAP ---
-    async function syncWithAirwap(action, payload) {
-        const AIRWAP_ENDPOINT = "https://vasedomena.cz/api/airwap-webhook"; 
+        // --- LOGIKA NAČÍTÁNÍ UŽIVATELE (ZABEZPEČENÁ OBRÁCENÁ LOGIKA) ---
+        let isRegistered = false;
+        let hasName = null;
+        let phone = null;
         
         try {
-            console.log(`Odesílám data do Airwap [${action}]:`, payload);
-            const response = await fetch(AIRWAP_ENDPOINT, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ action: action, data: payload, timestamp: new Date().toISOString() })
-            });
-            if (!response.ok) {
-                console.warn("Komunikace s aplikací Airwap selhala:", response.status);
-            }
-        } catch (error) {
-            console.error("Chyba sítě při odesílání do Airwap:", error);
+            isRegistered = localStorage.getItem('taxi_green_registered') === 'true';
+            hasName = localStorage.getItem('taxi_green_name');
+            phone = localStorage.getItem('taxi_green_phone');
+        } catch(e) {
+            console.warn("Prohlížeč blokuje paměť, vyžaduji novou registraci.");
         }
-    }
-    // ------------------------
-
-    function playBeeps() {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContext) return;
-        const ctx = new AudioContext();
-        for (let i = 0; i < 5; i++) {
-            setTimeout(() => {
-                const osc1 = ctx.createOscillator();
-                const osc2 = ctx.createOscillator();
-                const gain = ctx.createGain();
-                
-                osc1.connect(gain);
-                osc2.connect(gain);
-                gain.connect(ctx.destination);
-                
-                osc1.type = 'square';
-                osc2.type = 'triangle';
-                
-                osc1.frequency.setValueAtTime(900, ctx.currentTime);
-                osc2.frequency.setValueAtTime(905, ctx.currentTime);
-                
-                gain.gain.setValueAtTime(0, ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.05); 
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-                
-                osc1.start(ctx.currentTime);
-                osc2.start(ctx.currentTime);
-                osc1.stop(ctx.currentTime + 0.4);
-                osc2.stop(ctx.currentTime + 0.4);
-            }, i * 600); 
-        }
-    }
-
-   window.addEventListener('DOMContentLoaded', () => {
-        const isRegistered = localStorage.getItem('taxi_green_registered') === 'true';
-        const hasName = localStorage.getItem('taxi_green_name');
-        const phone = localStorage.getItem('taxi_green_phone');
         
         if (isRegistered && hasName && phone) { 
+            // Pokud je uživatel nalezen, SCHOVÁME registrační okno
             document.getElementById('registration-overlay').style.display = 'none'; 
             
             if (db) {
@@ -677,11 +697,122 @@
                       }).catch(e => console.log("Nepodařilo se načíst aktivní relace: ", e));
                 }).catch(e => console.log("Nepodařilo se ověřit uživatele: ", e));
             }
-        } else { 
-            localStorage.removeItem('taxi_green_registered'); 
-            document.getElementById('registration-overlay').style.display = 'block'; 
         }
     });
+
+    // --- TRVALÉ VYNUCENÍ FULLSCREENU (OPRAVA PRO APPLE DOTYKY) ---
+    function enforceCustomerFullscreen() {
+        if (/iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase())) {
+            return; 
+        }
+
+        const docElm = document.documentElement;
+        
+        if (!document.fullscreenElement && window.innerWidth <= 768) {
+            try {
+                if (docElm.requestFullscreen) docElm.requestFullscreen();
+                else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
+                else if (docElm.mozRequestFullScreen) docElm.mozRequestFullScreen();
+                else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
+            } catch (e) {
+                console.warn("Fullscreen zamítnut prohlížečem", e);
+            }
+        }
+    }
+
+    if (!/iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase())) {
+        document.body.addEventListener('click', enforceCustomerFullscreen);
+        document.body.addEventListener('touchstart', enforceCustomerFullscreen, { passive: true });
+    }
+
+    // --- PŘEPÍNÁNÍ ADMINISTRACE ---
+    window.showAdminSection = function(sectionId, btnElement) {
+        document.querySelectorAll('.admin-section').forEach(sec => sec.style.display = 'none');
+        document.querySelectorAll('.admin-tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('admin-section-' + sectionId).style.display = 'block';
+        if (btnElement) btnElement.classList.add('active');
+    };
+
+    const greenCarIcon = L.divIcon({ html: '<div class="driver-gps-marker"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#00FF00" width="30px" height="30px"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg></div>', className: '', iconSize: [38, 38], iconAnchor: [19, 19] });
+    const personIcon = L.divIcon({ html: '<div style="font-size:32px; filter:drop-shadow(2px 2px 2px rgba(0,0,0,0.5));">🧍</div>', className: '', iconSize: [32, 32], iconAnchor: [16, 32] });
+    const flagIcon = L.divIcon({ html: '<div style="font-size:32px; filter:drop-shadow(2px 2px 2px rgba(0,0,0,0.5));">🏁</div>', className: '', iconSize: [32, 32], iconAnchor: [8, 32] });
+    const wpIcon = L.divIcon({ html: '<div style="font-size:20px; filter:drop-shadow(2px 2px 2px rgba(0,0,0,0.5));">🔵</div>', className: '', iconSize: [20, 20], iconAnchor: [10, 10] });
+    const baseIcon = L.divIcon({ html: '<div style="font-size:32px; filter:drop-shadow(2px 2px 2px rgba(0,0,0,0.5));">🏢</div>', className: '', iconSize: [32, 32], iconAnchor: [16, 32] });
+
+    const firebaseConfig = { apiKey: "AIzaSyBU-wAdjtrC3wwkTulv432KfVVghnujYfg", authDomain: "kalkula-641ff.firebaseapp.com", projectId: "kalkula-641ff", storageBucket: "kalkula-641ff.firebasestorage.app", messagingSenderId: "126206326606", appId: "1:126206326606:web:2f391fa66e7f5bc54b901f" };
+    let db = null; 
+    let isAdminViewingRoute = false;
+    let currentPendingOrderId = null; 
+    let isPriceVisible = false; 
+    let orderConfirmedLock = false; 
+    let lastConfirmedOrderId = null;
+    let customerArchiveData = []; // Proměnná pro ukládání dat archivu zákazníka
+
+    try { 
+        firebase.initializeApp(firebaseConfig); 
+        db = firebase.firestore(); 
+    } catch (error) { 
+        console.error("Chyba databáze:", error); 
+    }
+
+    // --- INTEGRACE AIRWAP ---
+    async function syncWithAirwap(action, payload) {
+        const AIRWAP_ENDPOINT = "https://vasedomena.cz/api/airwap-webhook"; 
+        
+        try {
+            console.log(`Odesílám data do Airwap [${action}]:`, payload);
+            const response = await fetch(AIRWAP_ENDPOINT, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ action: action, data: payload, timestamp: new Date().toISOString() })
+            });
+            if (!response.ok) {
+                console.warn("Komunikace s aplikací Airwap selhala:", response.status);
+            }
+        } catch (error) {
+            console.error("Chyba sítě při odesílání do Airwap:", error);
+        }
+    }
+    // ------------------------
+
+    function playBeeps() {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        
+        // Použití globálního (odemčeného) audioCtx pro iOS
+        if (!audioCtx) audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const ctx = audioCtx;
+        for (let i = 0; i < 5; i++) {
+            setTimeout(() => {
+                const osc1 = ctx.createOscillator();
+                const osc2 = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc1.connect(gain);
+                osc2.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc1.type = 'square';
+                osc2.type = 'triangle';
+                
+                osc1.frequency.setValueAtTime(900, ctx.currentTime);
+                osc2.frequency.setValueAtTime(905, ctx.currentTime);
+                
+                gain.gain.setValueAtTime(0, ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.05); 
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+                
+                osc1.start(ctx.currentTime);
+                osc2.start(ctx.currentTime);
+                osc1.stop(ctx.currentTime + 0.4);
+                osc2.stop(ctx.currentTime + 0.4);
+            }, i * 600); 
+        }
+    }
 
     function openArchive() {
         const phone = localStorage.getItem('taxi_green_phone');
@@ -958,12 +1089,34 @@
         }
 
         if (db) { 
-            let regData = { date: new Date(), fullName: fullName, phone: phone, email: email, device: isMobile ? "Mobil" : "PC", location: locationText, latitude: finalLat, longitude: finalLng };
-            db.collection("registered_customers").add(regData).then(() => { 
-                syncWithAirwap("NEW_CUSTOMER", regData); 
+            try {
+                const querySnapshot = await db.collection("registered_customers").where("phone", "==", phone).limit(1).get();
+                
+                if (!querySnapshot.empty) {
+                    const docId = querySnapshot.docs[0].id;
+                    await db.collection("registered_customers").doc(docId).update({
+                        fullName: fullName,
+                        email: email,
+                        location: locationText,
+                        latitude: finalLat,
+                        longitude: finalLng,
+                        lastLoginDate: new Date()
+                    });
+                    console.log("Uživatel existuje, profil byl aktualizován.");
+                    completeRegistrationWorkflow(fullName, phone, email);
+                } else {
+                    let regData = { date: new Date(), fullName: fullName, phone: phone, email: email, device: isMobile ? "Mobil" : "PC", location: locationText, latitude: finalLat, longitude: finalLng };
+                    await db.collection("registered_customers").add(regData);
+                    syncWithAirwap("NEW_CUSTOMER", regData); 
+                    completeRegistrationWorkflow(fullName, phone, email); 
+                }
+            } catch (err) { 
+                console.error("Chyba při komunikaci s databází pro registraci:", err);
                 completeRegistrationWorkflow(fullName, phone, email); 
-            }).catch(err => { completeRegistrationWorkflow(fullName, phone, email); }); 
-        } else { completeRegistrationWorkflow(fullName, phone, email); }
+            } 
+        } else { 
+            completeRegistrationWorkflow(fullName, phone, email); 
+        }
         
         btn.innerText = originalBtnText; btn.disabled = false;
     }
@@ -1047,7 +1200,6 @@
                 
                 let dateHtml = data.date ? `${new Date(data.date.seconds * 1000).toLocaleDateString('cs-CZ')}<br><span style="color:gray; font-size:11px;">${data.time || new Date(data.date.seconds * 1000).toLocaleTimeString('cs-CZ')}</span>` : "Neznámý čas";
                 
-                // Rozevírací seznam (Dropdown) pro stavy podle vašeho přání
                 let statusSelectHtml = `
                     <select onchange="db.collection('taxi_orders').doc('${doc.id}').update({status: this.value})" style="padding:5px; font-size:12px; font-weight:bold; border-radius:6px; border:1px solid #cbd5e1; bg:white; cursor:pointer;">
                         <option value="Nová" ${data.status === 'Nová' ? 'selected' : ''}>Nová / Nepřijatá</option>
@@ -1490,6 +1642,8 @@
     }
 
     async function quickPickup() {
+        unlockAudioIOS(); // Odemknutí zvuku při dotyku (rychlá volba)
+
         const isRegistered = localStorage.getItem('taxi_green_registered') === 'true';
         const phone = localStorage.getItem('taxi_green_phone');
         
@@ -1501,14 +1655,12 @@
         const btn = document.getElementById('btn-quick-pickup');
         const originalText = btn.innerText;
 
-        // --- NOVÉ: Okamžitá kontrola v databázi před zaměřením polohy ---
         if (db) {
             btn.innerText = "Ověřuji...";
             btn.disabled = true;
             try {
                 const querySnapshot = await db.collection("registered_customers").where("phone", "==", phone).limit(1).get();
                 if (querySnapshot.empty) {
-                    // Účet neexistuje -> promazat paměť a zobrazit registraci
                     localStorage.removeItem('taxi_green_registered');
                     localStorage.removeItem('taxi_green_name');
                     localStorage.removeItem('taxi_green_phone');
@@ -1517,13 +1669,12 @@
                     document.getElementById('registration-overlay').style.display = 'block'; 
                     btn.innerText = originalText;
                     btn.disabled = false;
-                    return; // Ukončíme funkci, dál nepokračujeme
+                    return; 
                 }
             } catch (err) {
                 console.log("Nelze ověřit v DB, pokračuji s lokálními daty.");
             }
         }
-        // -----------------------------------------------------------------
 
         if (!navigator.geolocation) {
             alert("Vaše zařízení nepodporuje zaměření polohy GPS.");
@@ -1688,20 +1839,25 @@
 
         routingControl.on('routesfound', function(e) {
             let shortestRoute = e.routes[0]; 
-let distanceInKm = (shortestRoute.summary.totalDistance / 1000).toFixed(1);
-let totalPrice = currentMode === 'mimo' ? Math.round((distanceInKm * 13) + 20) : Math.round((distanceInKm * 34) + 20);
+            let distanceInKm = (shortestRoute.summary.totalDistance / 1000).toFixed(1);
+            let totalPrice = currentMode === 'mimo' ? Math.round((distanceInKm * 13) + 20) : Math.round((distanceInKm * 34) + 20);
 
-// Zajištění minimální celkové ceny 60 Kč
-totalPrice = Math.max(totalPrice, 60);
+            totalPrice = Math.max(totalPrice, 60);
 
-if (isPriceVisible) {
+            if (isPriceVisible) {
                 document.getElementById('dist-val').innerText = distanceInKm; 
                 document.getElementById('price-val').innerText = totalPrice.toLocaleString('cs-CZ');
                 
                 if (!isAdminViewingRoute && !currentPendingOrderId) {
                     document.getElementById('btn-order-taxi').style.display = 'block';
                 }
-                if (window.innerWidth <= 768) { setTimeout(() => { document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300); }
+                
+                if (window.innerWidth <= 768) { 
+                    setTimeout(() => { 
+                        map.invalidateSize(); 
+                        document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'start' }); 
+                    }, 400); 
+                }
                 
                 let now = Date.now();
                 if (db && !isAdminViewingRoute && (now - lastLogTime > 3000)) {
@@ -1752,6 +1908,8 @@ if (isPriceVisible) {
     }
 
     function orderTaxi(isQuick = false) {
+        unlockAudioIOS(); // Odemknutí zvuku při dotyku
+
         if (!db) return alert("Chyba připojení k databázi. Zkontrolujte připojení k internetu.");
         if (!coordsData.pickup) return alert("Prosím, vyberte nejdříve místo nakládky.");
 
@@ -1819,7 +1977,7 @@ if (isPriceVisible) {
    let orderListener = null;
     let hasPlayedArrivalSound = false;
     let isArrivalAcknowledged = false;
-    let etaCountdownInterval = null; // NOVÉ: Proměnná pro odpočet
+    let etaCountdownInterval = null;
 
    function listenToOrder(orderId) {
         if (orderListener) { orderListener(); }
@@ -1836,7 +1994,6 @@ if (isPriceVisible) {
 
             if (etaCountdownInterval) { clearInterval(etaCountdownInterval); etaCountdownInterval = null; }
 
-            // 1. TERMINÁLNÍ STAVY (Nejvyšší priorita - odemknou aplikaci)
             if (data.status === "Zákazník nastoupil" || data.status === "Zákazník ve voze" || data.status === "Probíhá jízda" || data.status === "Nastoupil") {
                 db.collection("taxi_orders").doc(orderId).update({ customerNote: "nastoupil jsem do vozu" }).catch(e => console.error(e));
                 resetAppForNewOrder(false); 
@@ -1851,8 +2008,6 @@ if (isPriceVisible) {
                 alert(statusMsg);
                 return;
             }
-            
-            // 2. MEZISTAV: Zákazník potvrdil "Už jdu"
             else if (data.status === "Už jdu") {
                 toggleInputs(true);
                 document.getElementById('btn-order-taxi').style.display = 'none';
@@ -1861,62 +2016,52 @@ if (isPriceVisible) {
                 driverOverlay.style.display = 'block';
                 driverOverlay.innerHTML = `<h3>Řidič byl informován, že již jdete k vozidlu.</h3>`;
             }
-            
-            // 3. Řidič je na místě 
-else if (data.status === "Na místě" || data.status === "Přistaveno" || data.driverArrived === true) {
-    toggleInputs(true);
-    document.getElementById('btn-order-taxi').style.display = 'none';
-    cBtn.style.display = 'none';
-    
-    driverOverlay.style.display = 'none';
-    driverOverlay.innerHTML = '';
-    
-    if (!isArrivalAcknowledged) {
-        arrivalOverlay.style.display = 'block';
-    }
-    
-    if (customerDriverMarker) {
-        map.removeLayer(customerDriverMarker);
-        customerDriverMarker = null;
-    }
-    
-    if (!hasPlayedArrivalSound) {
-        playBeeps(); // Nejprve to zapípá
-        
-        // Přečtení hlášky po 3 sekundách (aby to nekřičelo přes pípání)
-        setTimeout(() => {
-            // TENTO ŘÁDEK CHYBĚL:
-            const spolehlivaHlaska = () => {
-                if (!isArrivalAcknowledged && 'speechSynthesis' in window) {
-                    const msg = new SpeechSynthesisUtterance("Hej kámo auto už máš přistavené stiskni vím o tom a mazej nastoupit");
-                    msg.lang = 'cs-CZ';
-                    msg.volume = 1; 
-                    msg.rate = 1.1; // Lehké zrychlení (1.0 je základ, 1.1 je o 10 % rychlejší)
-                    msg.pitch = 1.2; // Mírné zvýšení hlasu zní často přirozeněji
-
-                    // Pokusíme se najít kvalitnější český hlas v zařízení zákazníka
-                    const voices = window.speechSynthesis.getVoices();
-                    const czechVoices = voices.filter(v => v.lang.includes('cs'));
-                    
-                    if (czechVoices.length > 0) {
-                        // Zkusíme najít hlas od Googlu (bývá na Androidu nejhezčí)
-                        const premiumVoice = czechVoices.find(v => v.name.includes('Google')) || czechVoices[0];
-                        msg.voice = premiumVoice;
-                    }
-                    window.speechSynthesis.speak(msg);
+            else if (data.status === "Na místě" || data.status === "Přistaveno" || data.driverArrived === true) {
+                toggleInputs(true);
+                document.getElementById('btn-order-taxi').style.display = 'none';
+                cBtn.style.display = 'none';
+                
+                driverOverlay.style.display = 'none';
+                driverOverlay.innerHTML = '';
+                
+                if (!isArrivalAcknowledged) {
+                    arrivalOverlay.style.display = 'block';
                 }
-            };
-            
-            spolehlivaHlaska(); // Přečte poprvé
-            // Uložíme interval globálně, abychom ho mohli vypnout
-            window.hlaskaInterval = setInterval(spolehlivaHlaska, 10000); // Opakuje každých 10 sekund
-        }, 3000);
+                
+                if (customerDriverMarker) {
+                    map.removeLayer(customerDriverMarker);
+                    customerDriverMarker = null;
+                }
+                
+                if (!hasPlayedArrivalSound) {
+                    playBeeps();
+                    setTimeout(() => {
+                        const spolehlivaHlaska = () => {
+                            if (!isArrivalAcknowledged && 'speechSynthesis' in window) {
+                                const msg = new SpeechSynthesisUtterance("Hej kámo auto už máš přistavené stiskni vím o tom a mazej nastoupit");
+                                msg.lang = 'cs-CZ';
+                                msg.volume = 1; 
+                                msg.rate = 1.1; 
+                                msg.pitch = 1.2; 
 
-        hasPlayedArrivalSound = true;
-    }
-}
-            
-            // 4. Potvrzeno (Řidič je na cestě)
+                                const voices = window.speechSynthesis.getVoices();
+                                const czechVoices = voices.filter(v => v.lang.includes('cs'));
+                                
+                                if (czechVoices.length > 0) {
+                                    const premiumVoice = czechVoices.find(v => v.name.includes('Google')) || czechVoices[0];
+                                    msg.voice = premiumVoice;
+                                }
+                                window.speechSynthesis.speak(msg);
+                            }
+                        };
+                        
+                        spolehlivaHlaska(); 
+                        window.hlaskaInterval = setInterval(spolehlivaHlaska, 10000); 
+                    }, 3000);
+
+                    hasPlayedArrivalSound = true;
+                }
+            }
             else if (data.status === "Potvrzeno" && data.driverArrived !== true) {
                 toggleInputs(true);
                 document.getElementById('btn-order-taxi').style.display = 'none';
@@ -1983,8 +2128,6 @@ else if (data.status === "Na místě" || data.status === "Přistaveno" || data.d
                     }
                 }
             }
-            
-            // 5. Nová objednávka (ještě nepřiřazeno)
             else if (data.status === "Nová") {
                 toggleInputs(true);
                 document.getElementById('btn-order-taxi').style.display = 'none';
@@ -1995,26 +2138,22 @@ else if (data.status === "Na místě" || data.status === "Přistaveno" || data.d
         });
     }
 
-    // UPRAVENÁ FUNKCE PRO KLIKNUTÍ NA TLAČÍTKO "OK, VÍM O TOM"
     window.acknowledgeArrival = function() {
         isArrivalAcknowledged = true;
         document.getElementById('arrival-overlay').style.display = 'none';
         
-        // NOVÉ: Zastavení opakování hlasové hlášky
-    if (window.hlaskaInterval) {
-        clearInterval(window.hlaskaInterval);
-    }
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-    }
+        if (window.hlaskaInterval) {
+            clearInterval(window.hlaskaInterval);
+        }
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
         if (currentPendingOrderId && db) {
-            // 1. Stav změněn na "Už jdu", aby se informace propsala řidiči do aplikace RW test
             db.collection("taxi_orders").doc(currentPendingOrderId).update({
                 customerAcknowledged: true,
                 status: "Už jdu" 
             }).then(() => {
                 syncWithAirwap("CUSTOMER_ON_WAY", { orderId: currentPendingOrderId, status: "Už jdu" }); 
-                // Vyčištění aplikace je nyní zakomentováno, provede se až po "Dokončeno" řidičem
             }).catch(e => {
                 console.error("Chyba při komunikaci s databází:", e);
                 resetAppForNewOrder(true);
@@ -2067,20 +2206,18 @@ else if (data.status === "Na místě" || data.status === "Přistaveno" || data.d
             alert("Přejeme šťastnou cestu! Aplikace je nyní plně odpojena a připravena pro novou objednávku.");
         }
     }
-// --- Vylepšení scrollování při otevřené klávesnici (Registrace) ---
-document.addEventListener('DOMContentLoaded', () => {
-    // Najdeme všechna textová a tel políčka v registračním okně
-    const regInputs = document.querySelectorAll('#registration-overlay input[type="text"], #registration-overlay input[type="tel"], #registration-overlay input[type="email"]');
-    
-    regInputs.forEach(input => {
-        input.addEventListener('focus', function() {
-            // Přidáme mírné zpoždění (300 ms), aby systémová klávesnice na mobilu stihla vyskočit
-            setTimeout(() => {
-                this.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 300);
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const regInputs = document.querySelectorAll('#registration-overlay input[type="text"], #registration-overlay input[type="tel"], #registration-overlay input[type="email"]');
+        
+        regInputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                setTimeout(() => {
+                    this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            });
         });
     });
-});
 </script>
 </body>
 </html>
